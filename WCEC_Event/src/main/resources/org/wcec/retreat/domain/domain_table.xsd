@@ -1,0 +1,29 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:element name="AllDomainTable">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="WCECDomainTable" minOccurs="0"
+					maxOccurs="unbounded" />
+
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="WCECDomainTable">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="DomainTableColumn" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+			<xsd:attribute name="tableName"      type="xsd:string" use="required" />
+			<xsd:attribute name="entityName"     type="xsd:string" use="required" />
+			<xsd:attribute name="repositoryName" type="xsd:string" use="required" />
+			<xsd:attribute name="repoProxy"      type="xsd:anySimpleType"  use="optional"  />
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="DomainTableColumn">
+		<xsd:complexType> 
+			<xsd:attribute name="tableColumnName" type="xsd:string" use="required" />
+			<xsd:attribute name="headerColumnName" type="xsd:string" use="required" /> 
+		</xsd:complexType>
+	</xsd:element> 
+</xsd:schema>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AllDomainTable xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="WCECDomainTable.xsd"> 
+
+		<WCECDomainTable tableName="event_type_tbl"
+			entityName="org.wcec.retreat.entity.EventTypeTbl" repositoryName="org.wcec.retreat.repo.EventTypeTblRepo" />
+		<WCECDomainTable tableName="building_tbl"
+			entityName="org.wcec.retreat.entity.BuildingTbl" repositoryName="org.wcec.retreat.repo.BuildingTblRepo" />
+		<WCECDomainTable tableName="room_tbl"
+			entityName="org.wcec.retreat.entity.RoomTbl" repositoryName="org.wcec.retreat.repo.RoomTblRepo" />
+		<WCECDomainTable tableName="bed_tbl"
+			entityName="org.wcec.retreat.entity.BedTypeTbl" repositoryName="org.wcec.retreat.repo.BedTypeTblRepo" />
+		<WCECDomainTable tableName="church_tbl"
+			entityName="org.wcec.retreat.entity.ChurchTbl" repositoryName="org.wcec.retreat.repo.ChurchTblRepo" />
+		<WCECDomainTable tableName="access_level"
+			entityName="org.wcec.retreat.entity.AccessLevel" repositoryName="org.wcec.retreat.repo.AccessLevelRepo" />
+		<WCECDomainTable tableName="group_type_tbl"
+			entityName="org.wcec.retreat.entity.GroupTypeTbl" repositoryName="org.wcec.retreat.repo.GroupTypeTblRepo" />
+		<WCECDomainTable tableName="user_tbl"
+			entityName="org.wcec.retreat.entity.UserTbl" repositoryName="org.wcec.retreat.repo.UserTblRepo" /> 
+		
+ 		<WCECDomainTable tableName="registration_tbl"
+			entityName="org.wcec.retreat.entity.RegistrationTbl" repositoryName="org.wcec.retreat.repo.RegistrationTblRepo" /> 
+		
+</AllDomainTable>

@@ -8,7 +8,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiConsumer;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -26,7 +25,6 @@ import org.wcec.retreat.extendedgui.MyTableMaintenanceDesign;
 import org.wcec.retreat.gui.vaadin.extended.MyListSelect;
 import org.wcec.retreat.model.RegistrationRecord;
 import org.wcec.retreat.model.RegistrationRecordCollection;
-import org.wcec.retreat.model.RegistrationRecordLabel;
 import org.wcec.retreat.repo.AccessLevelRepo;
 import org.wcec.retreat.repo.AddressTblRepo;
 import org.wcec.retreat.repo.BedTypeTblRepo;
@@ -52,28 +50,30 @@ import org.wcec.retreat.repo.UserLoginRepo;
 import org.wcec.retreat.repo.UserTblRepo;
 
 import com.google.common.collect.Lists;
-import com.vaadin.data.BeanPropertySet;
+import com.vaadin.data.Binder;
+import com.vaadin.data.Binder.Binding;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
-import com.vaadin.data.PropertySet;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Setter;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.components.grid.EditorSaveEvent;
 
+//@Theme("base")
 @SpringUI
 public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	@Autowired
@@ -192,18 +192,30 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	}
 	
 	VerticalLayout mainDomainTableLayout = new MyTableMaintenanceDesign(); 
+	Button newButton = new Button("Add");
 	
-	
-	protected void init_WCEC(VaadinRequest request) {
+	@Override	
+	protected void init(VaadinRequest request) {
 		 
-		VerticalLayout mainLayout = new VerticalLayout(); 
+		VerticalLayout mainLayout = new VerticalLayout();
+		final Label labelTitle = new Label("WCEC Retreat Registration Form");
+		//labelTitle.setStyleName("h1");
+		mainLayout.addComponent(labelTitle);
+		 
+		
+		final Label labelPerson = new Label("Add a person: "); 
+		
+		HorizontalLayout hLayout = new HorizontalLayout(labelPerson, newButton);
+		hLayout.setVisible(true); 
+		hLayout.setHeight(100, Unit.PERCENTAGE);
+		mainLayout.addComponent(hLayout); 
 		this.populateRegistrationGrid(mainLayout); 
 		setContent(mainLayout);
 	}
 	
 	
-	@Override
-	protected void init(VaadinRequest request) {
+	
+	protected void init_domaintables(VaadinRequest request) {
 		initializeDomainTableData();
 		// build layout
 		MyTableMaintenanceDesign theDesign = (MyTableMaintenanceDesign) mainDomainTableLayout;
@@ -413,7 +425,8 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 
 	
 	 
-
+	RegistrationRecordCollection mgr =  new RegistrationRecordCollection();
+	final Grid<RegistrationRecord> registrationGrid = new Grid(RegistrationRecord.class); 
 	/**
 	 * Add a grid for the implied domain table to the layout.
 	 * 
@@ -422,9 +435,8 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	void populateRegistrationGrid(VerticalLayout mLayout) { 
 		// instead of new Grid(beanType)
 		// PropertySet<RegistrationRecord> ps = BeanPropertySet.get(RegistrationRecord.class);
-		
-		Grid<RegistrationRecord> registrationGrid = new Grid(RegistrationRecord.class);
-		RegistrationRecordCollection mgr=  new RegistrationRecordCollection();
+		 
+		registrationGrid.setColumns("lastName", "firstName","chineseName", "gender", "freeWillOffering", "age");
 //		registrationGrid.addColumn("chineseName").setCaption(RegistrationRecordLabel.ChineseNameLabel);
 //		registrationGrid.addColumn("firstName").setCaption(RegistrationRecordLabel.EnglishFirstNameLabel);
 //		registrationGrid.addColumn("lastName").setCaption(RegistrationRecordLabel.EnglishLastNameLabel);
@@ -450,17 +462,33 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		registrationGrid.getColumn("lastName")
 		        .setCaption("Last Name")
 		        .setEditorComponent(new TextField())   // need a second argument for the setter!!
-		        .setExpandRatio(1);
-				
-		Column controlColumn = registrationGrid.getColumn("deleteButton");
-		controlColumn
-                .setCaption("Delete") 
-                .setExpandRatio(1);
+		        .setExpandRatio(1);  
+
+		Binder<RegistrationRecord> binder = registrationGrid.getEditor().getBinder(); 
+		CheckBox adultFlagField = new CheckBox();
+		
+  		
+		Column aColumn = registrationGrid.addComponentColumn(record -> {
+		    adultFlagField.addValueChangeListener(listener->{
+				  if (adultFlagField.getValue()) {
+					  record.setAdultFlag(true);
+				  } else {
+					  record.setAdultFlag(false);
+				  }
+			});  
+		    return adultFlagField;
+		});
+		
+		Binding<RegistrationRecord, Boolean> adultBinding = binder.bind(
+				adultFlagField, RegistrationRecord::isAdultFlag, RegistrationRecord::setAdultFlag); 
+		
+		aColumn.setEditorBinding(adultBinding);
+		aColumn.setCaption("Adult");
 		
 		registrationGrid.addComponentColumn(record -> {
-		      Button button = new Button("Click me!");
+		      Button button = new Button("Remove!");
 		      button.addClickListener(click ->
-		            Notification.show("Clicked: " + record.toString()));
+		      	removeARegistrationRecord(record));
 		      return button;
 		});
 		
@@ -478,6 +506,20 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
         }); 
 		
 		mLayout.addComponent(registrationGrid); 
+		 
+		
+		newButton.addClickListener(click -> {
+			mgr.addRecord(new RegistrationRecord());
+			registrationGrid.setItems(mgr.getCollection()); 
+		});
+
+	}
+	
+	
+	void removeARegistrationRecord(RegistrationRecord aRecord) {
+		Notification.show("Remove " + aRecord.getFirstName() + aRecord.getLastName());
+		mgr.removeRecord(aRecord);
+		registrationGrid.setItems(mgr.getCollection()); 
 	}
 	
 }

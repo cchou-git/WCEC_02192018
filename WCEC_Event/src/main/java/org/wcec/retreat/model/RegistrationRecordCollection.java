@@ -13,6 +13,10 @@ public class RegistrationRecordCollection {
 		collection.add(aRecord);
 	}
 	
+	public void removeRecord(RegistrationRecord aRecord) {
+		collection.remove(aRecord); 
+	}
+	
 	public RegistrationRecordCollection() { 
 	}
 	
@@ -32,4 +36,12 @@ public class RegistrationRecordCollection {
 		
 	}
 
+	public List<RegistrationRecord> getCollection() {
+		return collection;
+	}
+
+	public void setCollection(List<RegistrationRecord> collection) {
+		this.collection = collection;
+	} 
+	
 }

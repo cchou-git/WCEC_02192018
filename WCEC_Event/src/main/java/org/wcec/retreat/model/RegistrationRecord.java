@@ -9,15 +9,13 @@ public class RegistrationRecord implements Serializable {
 	String firstName = "Smart";
 	String lastName = "Wu";
 	String gender = "M";
-	boolean adultFlag = true;
+	boolean adultFlag = false;
 	boolean greaterThanFiveYearsOldFlag = true;
 	double freeWillOffering = 0.0;
 	int    age = 23;
 	String specialRequest = "none";
 	boolean needFancialFlag = true;
-	boolean definedFlag = false;
-	boolean deleteButton = false;
-	
+	boolean definedFlag = false;  
 	
 	
 	public int getCount() {
@@ -91,14 +89,6 @@ public class RegistrationRecord implements Serializable {
 	}
 	public void setNeedFancialFlag(boolean needFancialFlag) {
 		this.needFancialFlag = needFancialFlag;
-	}
-	public boolean isDeleteButton() {
-		return deleteButton;
-	}
-	public void setDeleteButton(boolean deleteButton) {
-		this.deleteButton = deleteButton;
-	}
-	
-	
+	} 
 
 }

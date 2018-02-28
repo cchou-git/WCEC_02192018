@@ -44,4 +44,11 @@ public class RegistrationRecordCollection {
 		this.collection = collection;
 	} 
 	
+	public boolean validateInput() {
+		/** TODO 
+		 *  Code up this work so it returns validated inputs.
+		 */
+		return true;
+	}
+	
 }

@@ -17,6 +17,8 @@
 		<class>org.wcec.retreat.entity.MealTbl</class>
 		<class>org.wcec.retreat.entity.PaymentTbl</class>
 		<class>org.wcec.retreat.entity.PersonTbl</class>
+		
+		<class>org.wcec.retreat.entity.JustPersonEntity</class>
 		<class>org.wcec.retreat.entity.PhoneTbl</class>
 		<class>org.wcec.retreat.entity.PhoneTypeTbl</class>
 		<class>org.wcec.retreat.entity.RegistrationTbl</class>

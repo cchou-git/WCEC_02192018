@@ -1,9 +1,23 @@
 package org.wcec.retreat.entity;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 
 /**
@@ -29,10 +43,10 @@ public class GroupTbl implements Serializable {
 	private Date lastUpdtTs;
 
 	@Column(name="parent_id")
-	private int parentId;
+	private Integer parentId;
 
 	@Column(name="person_id")
-	private int personId;
+	private Integer personId;
 
 	//bi-directional many-to-one association to GroupTypeTbl
 	@ManyToOne
@@ -40,12 +54,12 @@ public class GroupTbl implements Serializable {
 	private GroupTypeTbl groupTypeTbl;
 
 	//bi-directional many-to-one association to PersonTbl
-	@OneToMany(mappedBy="groupTbl")
-	private List<PersonTbl> personTbls;
+	@OneToMany(mappedBy="groupTbl", fetch = FetchType.EAGER)
+	private Set<PersonTbl> personTbls;
 
 	//bi-directional many-to-one association to RegistrationTbl
-	@OneToMany(mappedBy="groupTbl")
-	private List<RegistrationTbl> registrationTbls;
+	@OneToMany(mappedBy="groupTbl", fetch = FetchType.EAGER)
+	private Set<RegistrationTbl> registrationTbls;
 
 	public GroupTbl() {
 	}
@@ -74,19 +88,19 @@ public class GroupTbl implements Serializable {
 		this.lastUpdtTs = lastUpdtTs;
 	}
 
-	public int getParentId() {
+	public Integer getParentId() {
 		return this.parentId;
 	}
 
-	public void setParentId(int parentId) {
+	public void setParentId(Integer parentId) {
 		this.parentId = parentId;
 	}
 
-	public int getPersonId() {
+	public Integer getPersonId() {
 		return this.personId;
 	}
 
-	public void setPersonId(int personId) {
+	public void setPersonId(Integer personId) {
 		this.personId = personId;
 	}
 
@@ -98,11 +112,11 @@ public class GroupTbl implements Serializable {
 		this.groupTypeTbl = groupTypeTbl;
 	}
 
-	public List<PersonTbl> getPersonTbls() {
+	public Set<PersonTbl> getPersonTbls() {
 		return this.personTbls;
 	}
 
-	public void setPersonTbls(List<PersonTbl> personTbls) {
+	public void setPersonTbls(Set<PersonTbl> personTbls) {
 		this.personTbls = personTbls;
 	}
 
@@ -120,11 +134,11 @@ public class GroupTbl implements Serializable {
 		return personTbl;
 	}
 
-	public List<RegistrationTbl> getRegistrationTbls() {
+	public Set<RegistrationTbl> getRegistrationTbls() {
 		return this.registrationTbls;
 	}
 
-	public void setRegistrationTbls(List<RegistrationTbl> registrationTbls) {
+	public void setRegistrationTbls(Set<RegistrationTbl> registrationTbls) {
 		this.registrationTbls = registrationTbls;
 	}
 

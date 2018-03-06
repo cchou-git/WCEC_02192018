@@ -19,10 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.StringUtils;
+import org.wcec.retreat.authentication.PublicComponent;
 import org.wcec.retreat.domain.generated.AllDomainTable;
 import org.wcec.retreat.domain.generated.WCECDomainTable;
+import org.wcec.retreat.entity.AddressTbl;
 import org.wcec.retreat.entity.ChurchTbl;
 import org.wcec.retreat.entity.EventTbl;
+import org.wcec.retreat.entity.GroupTbl;
 import org.wcec.retreat.extendedgui.MyTableMaintenanceDesign;
 import org.wcec.retreat.gui.vaadin.extended.MyListSelect;
 import org.wcec.retreat.model.RegistrationRecord;
@@ -38,6 +41,7 @@ import org.wcec.retreat.repo.EventTblRepo;
 import org.wcec.retreat.repo.EventTypeTblRepo;
 import org.wcec.retreat.repo.GroupTblRepo;
 import org.wcec.retreat.repo.GroupTypeTblRepo;
+import org.wcec.retreat.repo.JustPersonEntityRepository;
 import org.wcec.retreat.repo.LodgingAssignmentTblRepo;
 import org.wcec.retreat.repo.MealPlanTblRepo;
 import org.wcec.retreat.repo.MealTblRepo;
@@ -52,18 +56,18 @@ import org.wcec.retreat.repo.UserLoginRepo;
 import org.wcec.retreat.repo.UserTblRepo;
 
 import com.google.common.collect.Lists;
-import com.vaadin.data.Binder;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
-import com.vaadin.data.converter.StringToIntegerConverter;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Setter;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
@@ -72,6 +76,8 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.renderers.ComponentRenderer;
+import com.vaadin.ui.renderers.TextRenderer;
 
 //@Theme("base")
 @SpringUI
@@ -128,6 +134,9 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	PersonTblRepository                        ThePersonTblRepository;
 	
 	@Autowired
+	JustPersonEntityRepository                 TheJustPersonEntityRepository;
+
+	@Autowired
 	PhoneTblRepo                               ThePhoneTblRepo;
 	
 	@Autowired
@@ -146,6 +155,9 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	UserTblRepo                                TheUserTblRepo;
 	
 
+	public static List<ChurchTbl> AllChurch;
+	public static List<AddressTbl> AllAddress;
+	public static List<GroupTbl> AllGroup;
 	 
 	/**
 	 * 
@@ -199,22 +211,56 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	
 	boolean loginFlag = false;
 	
-	@Override	
-	protected void init(VaadinRequest request) {
+	@Override
+	protected void init(VaadinRequest vaadinRequest) {
+	System.out.println( "init()");
+
+	PublicComponent wPubComp = new PublicComponent( 
+	TheUserLoginRepo, 
+	TheUserTblRepo, 
+	ThePersonTblRepository );
+
+	if ( !wPubComp.isUserAuthenticated()) {
+	setContent(wPubComp);
+	} else {
+	showPrivateComponent();
+	}
+
+	}
+
+	public void showPrivateComponent() {
+		VerticalLayout mainLayout = new VerticalLayout();
+		final Label labelTitle = new Label("WCEC Retreat Registration Form");
+		// labelTitle.setStyleName("h1");
+		mainLayout.addComponent(labelTitle);
+
+		final Label labelPerson = new Label("Add a person: ");
+
+		HorizontalLayout hLayout = new HorizontalLayout(labelPerson, newButton);
+		hLayout.setVisible(true);
+		hLayout.setHeight(100, Unit.PERCENTAGE);
+		mainLayout.addComponent(hLayout);
+		this.populateRegistrationGrid(mainLayout);
+		mainLayout.addComponent(submitButton);
+		setContent(mainLayout);
+
+		}
+
 		
-		if(!loginFlag) {
-			mMyLoginWindow = new LoginWindow(TheUserLoginRepo, TheUserTblRepo);
+	protected void init_old(VaadinRequest request) {
+		AllChurch = TheChurchTblRepo.findAll();
+		AllGroup = TheGroupTblRepo.findAll();
+		AllAddress = TheAddressTblRepo.findAll();
+		/*if(!loginFlag) {
+			mMyLoginWindow = new LoginWindow(TheUserLoginRepo, TheUserTblRepo, ThePersonTblRepository);
 			addWindow(mMyLoginWindow);
 			loginFlag = true;
-		} else {
+		} else {*/
 			VerticalLayout mainLayout = new VerticalLayout();
 			final Label labelTitle = new Label("WCEC Retreat Registration Form");
 			//labelTitle.setStyleName("h1");
 			mainLayout.addComponent(labelTitle);
-			 
-			
 			final Label labelPerson = new Label("Add a person: "); 
-			
 			HorizontalLayout hLayout = new HorizontalLayout(labelPerson, newButton);
 			hLayout.setVisible(true); 
 			hLayout.setHeight(100, Unit.PERCENTAGE);
@@ -222,12 +268,10 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 			this.populateRegistrationGrid(mainLayout); 
 			mainLayout.addComponent(submitButton);
 			setContent(mainLayout);
-		}
+		//}
 	}
 	
-	
-	
-	protected void initDTCC(VaadinRequest request) {
+	protected void init_domain(VaadinRequest request) {
 		initializeDomainTableData();
 		// build layout
 		MyTableMaintenanceDesign theDesign = (MyTableMaintenanceDesign) mainDomainTableLayout;
@@ -455,7 +499,9 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		// instead of new Grid(beanType)
 		// PropertySet<RegistrationRecord> ps = BeanPropertySet.get(RegistrationRecord.class);
 		 
-		registrationGrid.setColumns("lastName", "firstName","chineseName", "gender", "age", "adultFlag", "specialRequest", "freeWillOffering", "needFancialFlag");
+		registrationGrid.setColumns("greaterThanFiveYearsOldFlag", "lastName", "firstName","chineseName", "gender", 
+				 "adultFlag", "specialRequest", 
+				"freeWillOffering", "needFancialFlag", "fullTimeFlag", "attendingDates");
 //		registrationGrid.addColumn("chineseName").setCaption(RegistrationRecordLabel.ChineseNameLabel);
 //		registrationGrid.addColumn("firstName").setCaption(RegistrationRecordLabel.EnglishFirstNameLabel);
 //		registrationGrid.addColumn("lastName").setCaption(RegistrationRecordLabel.EnglishLastNameLabel);
@@ -466,6 +512,28 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 //		registrationGrid.addColumn("age").setCaption(RegistrationRecordLabel.AgeLabel);
 //		registrationGrid.addColumn("specialRequest").setCaption(RegistrationRecordLabel.SpecialNeedLabel);
 //		registrationGrid.addColumn("needFancialFlag").setCaption(RegistrationRecordLabel.FinancialNeedLabel);
+		
+		/* Sample code 
+		 * 
+		 * 
+		 * 
+		 * Column<Person, Address> column = grid.addColumn(Person::getAddress);
+// alternatively, the presentation provider can be given as an extra parameter
+// to addColumn()
+column.setRenderer(
+    address -> address.getCity() + " " + address.getCountry(),
+    new TextRenderer());
+column.setCaption("Address");
+column.setEditorComponent(new AddressField(), Person::setAddress);
+
+		 */
+		
+		//registrationGrid.setSelectionMode(SelectionMode.MULTI);
+		
+		TextRenderer renderer = new TextRenderer();
+		
+		
+		
 		registrationGrid.setItems(mgr.populateDefaultRecords());
 		registrationGrid.setHeight(300, Unit.PIXELS);
 		registrationGrid.setWidth(100, Unit.PERCENTAGE);
@@ -489,28 +557,65 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
         .setEditorComponent(aField)   // need a second argument for the setter!!
         .setExpandRatio(1);  
 		
-		Binder<RegistrationRecord> binder = new Binder<>();
-		binder.forField(aField)
-		  .withConverter(
-		    new StringToIntegerConverter("Must enter a number"))
-		  .bind(RegistrationRecord::getAge, RegistrationRecord::setAge);
+		ListSelect select = new ListSelect("Attending Date");
+		select.setItems(RegistrationRecord.AttendingDates);
+		registrationGrid.getColumn("attendingDates")
+        .setEditorComponent(select)   // need a second argument for the setter!!
+        .setExpandRatio(1);  
 		
 		
-		registrationGrid.getColumn("age")
-        .setEditorComponent(new TextField())   // need a second argument for the setter!!
-        .setExpandRatio(1); 
+		
+		
+		CheckBox adultFlagCheckBox = new CheckBox();
+		
 		registrationGrid.getColumn("adultFlag")
-        .setEditorComponent(new TextField())   // need a second argument for the setter!!
+        .setEditorComponent(adultFlagCheckBox)    
+        .setExpandRatio(1);
+		
+		CheckBox fullTimeFlagCheckBox = new CheckBox();
+		
+		registrationGrid.getColumn("fullTimeFlag")
+        .setEditorComponent(fullTimeFlagCheckBox) 
+        .setExpandRatio(1);
+		
+		
+		
+		CheckBox greaterThanFiveYearsOldFlagCheckBox = new CheckBox();
+		
+		//TextField greaterThanFiveYearsOldFlagField = new TextField();
+		
+		registrationGrid.getColumn("greaterThanFiveYearsOldFlag")
+        .setEditorComponent(greaterThanFiveYearsOldFlagCheckBox)   // need a second argument for the setter!!
         .setExpandRatio(1); 
+		
+		
 		registrationGrid.getColumn("specialRequest")
         .setEditorComponent(new TextField())   // need a second argument for the setter!!
         .setExpandRatio(1); 
+		
+		
+		TextField freeWillOfferingField = new TextField();
+		
 		registrationGrid.getColumn("freeWillOffering")
-        .setEditorComponent(new TextField())   // need a second argument for the setter!!
+        .setEditorComponent(freeWillOfferingField)   // need a second argument for the setter!!
         .setExpandRatio(1); 
+		
+		CheckBox needFancialFlagCheckBox = new CheckBox();
+
 		registrationGrid.getColumn("needFancialFlag")
-        .setEditorComponent(new TextField())   // need a second argument for the setter!!
+        .setEditorComponent(needFancialFlagCheckBox)   // need a second argument for the setter!!
         .setExpandRatio(1); 
+		
+		Column aColumn = registrationGrid.getColumn("adultFlag");
+		ComponentRenderer aCompRenderer = new ComponentRenderer();
+		/*aCompRenderer.
+		aColumn.setRenderer(renderer);
+		registrationGrid.addComponentColumn(record -> {
+		      Checkbox chkBox = new Checkbox();
+		      chkBox.addClickListener(click ->
+		      setAdultFlagForRegistrationRecord(record));
+		      return chkBox;
+		});*/  
 		
 		registrationGrid.addComponentColumn(record -> {
 		      Button button = new Button("Remove!");
@@ -540,7 +645,8 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		});
 
 		submitButton.addClickListener(click -> {
-			if (mgr.validateInput()) {
+			RegistrationRecord problemRecord = mgr.validateInput(TheJustPersonEntityRepository, ThePersonTblRepository);
+			if (null == problemRecord) {
 				if (upsertRegistration()) {
 					/* TODO 
 					 * Ensure there are 
@@ -562,6 +668,13 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		Notification.show("Remove " + aRecord.getFirstName() + aRecord.getLastName());
 		mgr.removeRecord(aRecord);
 		registrationGrid.setItems(mgr.getCollection()); 
+	}
+	
+	void setAdultFlagForRegistrationRecord(RegistrationRecord aRecord) {
+		/*
+		mgr.removeRecord(aRecord);
+		registrationGrid.setItems(mgr.getCollection());
+		*/ 
 	}
 	
 	boolean upsertRegistration() {

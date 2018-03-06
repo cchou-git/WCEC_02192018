@@ -1,9 +1,23 @@
 package org.wcec.retreat.entity;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 
 /**
@@ -45,20 +59,20 @@ public class PersonTbl implements Serializable {
 	private int primaryGroupId;
 
 	//bi-directional many-to-one association to EmailTbl
-	@OneToMany(mappedBy="personTbl")
-	private List<EmailTbl> emailTbls;
+	@OneToMany(mappedBy="personTbl",  fetch = FetchType.EAGER)
+	private Set<EmailTbl> emailTbls;
 
 	//bi-directional many-to-one association to EventHostTbl
-	@OneToMany(mappedBy="personTbl")
-	private List<EventHostTbl> eventHostTbls;
+	@OneToMany(mappedBy="personTbl",  fetch = FetchType.EAGER)
+	private Set<EventHostTbl> eventHostTbls;
 
 	//bi-directional many-to-one association to LodgingAssignmentTbl
-	@OneToMany(mappedBy="personTbl")
-	private List<LodgingAssignmentTbl> lodgingAssignmentTbls;
+	@OneToMany(mappedBy="personTbl",  fetch = FetchType.EAGER)
+	private Set<LodgingAssignmentTbl> lodgingAssignmentTbls;
 
 	//bi-directional many-to-one association to PaymentTbl
-	@OneToMany(mappedBy="personTbl")
-	private List<PaymentTbl> paymentTbls;
+	@OneToMany(mappedBy="personTbl",  fetch = FetchType.EAGER)
+	private Set<PaymentTbl> paymentTbls;
 
 	//bi-directional many-to-one association to GroupTbl
 	@ManyToOne
@@ -76,12 +90,12 @@ public class PersonTbl implements Serializable {
 	private AddressTbl addressTbl;
 
 	//bi-directional many-to-one association to PhoneTbl
-	@OneToMany(mappedBy="personTbl")
-	private List<PhoneTbl> phoneTbls;
+	@OneToMany(mappedBy="personTbl",  fetch = FetchType.EAGER)
+	private Set<PhoneTbl> phoneTbls;
 
 	//bi-directional many-to-one association to RegistrationTbl
-	@OneToMany(mappedBy="personTbl")
-	private List<RegistrationTbl> registrationTbls;
+	@OneToMany(mappedBy="personTbl",  fetch = FetchType.EAGER)
+	private Set<RegistrationTbl> registrationTbls;
 
 	public PersonTbl() {
 	}
@@ -150,11 +164,11 @@ public class PersonTbl implements Serializable {
 		this.primaryGroupId = primaryGroupId;
 	}
 
-	public List<EmailTbl> getEmailTbls() {
+	public Set<EmailTbl> getEmailTbls() {
 		return this.emailTbls;
 	}
 
-	public void setEmailTbls(List<EmailTbl> emailTbls) {
+	public void setEmailTbls(Set<EmailTbl> emailTbls) {
 		this.emailTbls = emailTbls;
 	}
 
@@ -172,11 +186,11 @@ public class PersonTbl implements Serializable {
 		return emailTbl;
 	}
 
-	public List<EventHostTbl> getEventHostTbls() {
+	public Set<EventHostTbl> getEventHostTbls() {
 		return this.eventHostTbls;
 	}
 
-	public void setEventHostTbls(List<EventHostTbl> eventHostTbls) {
+	public void setEventHostTbls(Set<EventHostTbl> eventHostTbls) {
 		this.eventHostTbls = eventHostTbls;
 	}
 
@@ -194,11 +208,11 @@ public class PersonTbl implements Serializable {
 		return eventHostTbl;
 	}
 
-	public List<LodgingAssignmentTbl> getLodgingAssignmentTbls() {
+	public Set<LodgingAssignmentTbl> getLodgingAssignmentTbls() {
 		return this.lodgingAssignmentTbls;
 	}
 
-	public void setLodgingAssignmentTbls(List<LodgingAssignmentTbl> lodgingAssignmentTbls) {
+	public void setLodgingAssignmentTbls(Set<LodgingAssignmentTbl> lodgingAssignmentTbls) {
 		this.lodgingAssignmentTbls = lodgingAssignmentTbls;
 	}
 
@@ -216,11 +230,11 @@ public class PersonTbl implements Serializable {
 		return lodgingAssignmentTbl;
 	}
 
-	public List<PaymentTbl> getPaymentTbls() {
+	public Set<PaymentTbl> getPaymentTbls() {
 		return this.paymentTbls;
 	}
 
-	public void setPaymentTbls(List<PaymentTbl> paymentTbls) {
+	public void setPaymentTbls(Set<PaymentTbl> paymentTbls) {
 		this.paymentTbls = paymentTbls;
 	}
 
@@ -262,11 +276,11 @@ public class PersonTbl implements Serializable {
 		this.addressTbl = addressTbl;
 	}
 
-	public List<PhoneTbl> getPhoneTbls() {
+	public Set<PhoneTbl> getPhoneTbls() {
 		return this.phoneTbls;
 	}
 
-	public void setPhoneTbls(List<PhoneTbl> phoneTbls) {
+	public void setPhoneTbls(Set<PhoneTbl> phoneTbls) {
 		this.phoneTbls = phoneTbls;
 	}
 
@@ -284,11 +298,11 @@ public class PersonTbl implements Serializable {
 		return phoneTbl;
 	}
 
-	public List<RegistrationTbl> getRegistrationTbls() {
+	public Set<RegistrationTbl> getRegistrationTbls() {
 		return this.registrationTbls;
 	}
 
-	public void setRegistrationTbls(List<RegistrationTbl> registrationTbls) {
+	public void setRegistrationTbls(Set<RegistrationTbl> registrationTbls) {
 		this.registrationTbls = registrationTbls;
 	}
 

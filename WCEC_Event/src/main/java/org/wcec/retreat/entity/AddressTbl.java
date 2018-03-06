@@ -1,9 +1,20 @@
 package org.wcec.retreat.entity;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 
 /**
@@ -38,8 +49,8 @@ public class AddressTbl implements Serializable {
 	private String zipCode;
 
 	//bi-directional many-to-one association to PersonTbl
-	@OneToMany(mappedBy="addressTbl")
-	private List<PersonTbl> personTbls;
+	@OneToMany(mappedBy="addressTbl" , fetch = FetchType.EAGER)
+	private Set<PersonTbl> personTbls;
 
 	public AddressTbl() {
 	}
@@ -92,11 +103,11 @@ public class AddressTbl implements Serializable {
 		this.zipCode = zipCode;
 	}
 
-	public List<PersonTbl> getPersonTbls() {
+	public Set<PersonTbl> getPersonTbls() {
 		return this.personTbls;
 	}
 
-	public void setPersonTbls(List<PersonTbl> personTbls) {
+	public void setPersonTbls(Set<PersonTbl> personTbls) {
 		this.personTbls = personTbls;
 	}
 

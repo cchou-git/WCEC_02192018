@@ -71,7 +71,8 @@ create table `wcec`.address_tbl (
 `id` INT NOT NULL AUTO_INCREMENT,
 `line1` VARCHAR(80) NOT NULL,
 `line2` VARCHAR(80),
-`state` VARCHAR(2),
+`city`  VARCHAR(40) NOT NULL,
+`state` VARCHAR(2) NOT NULL,
 `zip_code` VARCHAR(10) NOT NULL,
 PRIMARY KEY (`id`),
 `last_updt_ts` DATETIME NOT NULL default CURRENT_TIMESTAMP 
@@ -485,25 +486,14 @@ insert into wcec.church_tbl (name) values ('New Castle');
 
 
 
-insert into wcec.group_type_tbl(description) values ('Family');
+
+
+insert into wcec.group_type_tbl(description) values ('Cell Group');
 insert into wcec.group_type_tbl(description) values ('UD college student');
 insert into wcec.group_type_tbl(description) values ('UD graduate student');
 insert into wcec.group_type_tbl(description) values ('UD young professional');
-insert into wcec.group_type_tbl(description) values ('UD visiting scholar'); 
-insert into wcec.group_type_tbl(description) values ('Cell group LOVE');
-insert into wcec.group_type_tbl(description) values ('Cell group JOY');
-insert into wcec.group_type_tbl(description) values ('Cell group PEACE');
-insert into wcec.group_type_tbl(description) values ('Cell group PATIENCE');
-insert into wcec.group_type_tbl(description) values ('Cell group KINDNESS');
-insert into wcec.group_type_tbl(description) values ('Cell group GOODNESS');
-insert into wcec.group_type_tbl(description) values ('Cell group FAITHFULNESS');
-insert into wcec.group_type_tbl(description) values ('Cell group GENTLENESS');
-insert into wcec.group_type_tbl(description) values ('Cell group SELF-CONTROL');
-insert into wcec.group_type_tbl(description) values ('Cell group CANTONESE');
-insert into wcec.group_type_tbl(description) values ('Cell group EVERGREEN');
-insert into wcec.group_type_tbl(description) values ('Cell group UD FELLOWSHIP');
+insert into wcec.group_type_tbl(description) values ('UD visiting scholar');
 insert into wcec.group_type_tbl(description) values ('Cell group FRIDAY FELLOWSHIP');
-insert into wcec.group_type_tbl(description) values ('Cell group KOINONIA');
 insert into wcec.group_type_tbl(description) values ('Cell group ENGLISH MINISTRY');
 insert into wcec.group_type_tbl(description) values ('Cell group CROSS CULTURE');
 insert into wcec.group_type_tbl(description) values ('Cell group WCCEC');
@@ -511,6 +501,23 @@ insert into wcec.group_type_tbl(description) values ('Cell group NCCEC');
 insert into wcec.group_type_tbl(description) values ('Cell group NEW FRIENDS');
 insert into wcec.group_type_tbl(description) values ('Cell group DOVER');
 insert into wcec.group_type_tbl(description) values ('Cell group OTHER');
+
+
+
+insert into wcec.group_tbl(group_nm, group_type) values ('仁愛小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('喜樂小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('和平小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('忍耐小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('豐盛小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('恩友團契', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('恩慈小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('良善小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('信實小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('溫柔小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('節制小組', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('粵語團契', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('松柏團契', 1);
+insert into wcec.group_tbl(group_nm, group_type) values ('徳大校园团契', 1);
 
 
 

@@ -2,9 +2,19 @@
 <AllDomainTable xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="WCECDomainTable.xsd"> 
 
+    	<WCECDomainTable tableName="group_tbl"
+			entityName="org.wcec.retreat.entity.GroupTbl" repositoryName="org.wcec.retreat.repo.GroupTblRepo" />
 		<WCECDomainTable tableName="event_type_tbl"
 			entityName="org.wcec.retreat.entity.EventTypeTbl" repositoryName="org.wcec.retreat.repo.EventTypeTblRepo" />
-		<WCECDomainTable tableName="building_tbl"
+		<WCECDomainTable tableName="person_tbl"
+			entityName="org.wcec.retreat.entity.PersonTbl" repositoryName="org.wcec.retreat.repo.PersonTblRepository" />
+		<WCECDomainTable tableName="emailtbl"
+			entityName="org.wcec.retreat.entity.EmailTbl" repositoryName="org.wcec.retreat.repo.EmailTblRepo" />
+		<WCECDomainTable tableName="address_tbl"
+			entityName="org.wcec.retreat.entity.AddressTbl" repositoryName="org.wcec.retreat.repo.AddressTblRepo" />
+		<WCECDomainTable tableName="user_tbl"
+			entityName="org.wcec.retreat.entity.UserTbl" repositoryName="org.wcec.retreat.repo.UserTblRepo" />
+				<WCECDomainTable tableName="building_tbl"
 			entityName="org.wcec.retreat.entity.BuildingTbl" repositoryName="org.wcec.retreat.repo.BuildingTblRepo" />
 		<WCECDomainTable tableName="room_tbl"
 			entityName="org.wcec.retreat.entity.RoomTbl" repositoryName="org.wcec.retreat.repo.RoomTblRepo" />

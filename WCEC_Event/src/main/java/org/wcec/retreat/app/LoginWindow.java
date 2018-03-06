@@ -4,6 +4,7 @@ package org.wcec.retreat.app;
 import java.util.Collection;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.wcec.retreat.entity.PersonTbl;
 import org.wcec.retreat.entity.UserTbl;
 
 import com.vaadin.ui.Button;
@@ -27,24 +28,24 @@ public class LoginWindow extends Window {
     
     JpaRepository myRepo;
     JpaRepository myUserRepo;
+    JpaRepository myPersonRepo;
     
-    public LoginWindow(JpaRepository aRepo, JpaRepository userRepo) {
+    public LoginWindow(JpaRepository aRepo, JpaRepository userRepo, JpaRepository pRepo) {
         super(" Login");
         setContent(mLayout);
         myRepo = aRepo;
         myUserRepo = userRepo;
-        initUI();
-        
+        myPersonRepo = pRepo;
+        initUI(); 
     }
-
     private void initUI() {
         mTxtUsername.setRequiredIndicatorVisible(true);
 
         final Panel wLoginPanel = new Panel("WCEC 2008 Retreat Login");
         mLayout.addComponent(wLoginPanel);
-        
         mBtnLogin.addClickListener(e -> {
-        	Collection<UserTbl> allUsers = myUserRepo.findAll();
+        	Collection<PersonTbl> persons = myPersonRepo.findAll();
+            Collection<UserTbl> allUsers = myUserRepo.findAll();
         	for (UserTbl usr : allUsers) {
         		System.out.println(usr.getUserEmailId());
         		System.out.println(usr.getPassword());

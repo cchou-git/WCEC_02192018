@@ -5,5 +5,6 @@ import org.wcec.retreat.entity.GroupTypeTbl;
 
 public interface GroupTypeTblRepo  extends JpaRepository<GroupTypeTbl, Integer> {
 
+		
 
 } 

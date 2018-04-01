@@ -20,6 +20,7 @@ import com.vaadin.ui.Notification;
 
 public class UserService {
 
+	public static final String SESSION_USER = "SESSION_USER";
 	private SecureRandom random = new SecureRandom();
 	private JpaRepository mPersonRepo;
 	private JpaRepository mUserLoginRepo;
@@ -65,6 +66,7 @@ public class UserService {
 					doClearArrayWithZero(wvcPwd);
 					doUpdUserLoginRepo(theUser.getId());
 					System.out.println("User person=" + thePersonList.get(0).getChineseNm());
+					VaadinSession.getCurrent().setAttribute(SESSION_USER, theUser);
 					return true;
 				} 
 				Notification.show("Wrong password", Notification.Type.ERROR_MESSAGE); 

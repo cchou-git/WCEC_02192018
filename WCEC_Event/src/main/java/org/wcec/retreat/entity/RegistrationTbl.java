@@ -1,10 +1,25 @@
 package org.wcec.retreat.entity;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 
 /**
@@ -22,12 +37,20 @@ public class RegistrationTbl implements Serializable {
 	@Column(unique=true, nullable=false)
 	private int id;
 
-	@Temporal(TemporalType.DATE)
-	@Column(name="attending_date", nullable=false)
-	private Date attendingDate;
-
 	@Column(name="discount_percentage", precision=10, scale=2)
 	private BigDecimal discountPercentage;
+
+	@Column(name="comment")
+	private String comment;
+
+	
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="last_updt_ts", nullable=false)
@@ -64,15 +87,26 @@ public class RegistrationTbl implements Serializable {
 	@JoinColumn(name="person_id", nullable=false)
 	private PersonTbl personTbl;
 
-	//bi-directional many-to-one association to PaymentTbl
-	@ManyToOne
-	@JoinColumn(name="payment_id", nullable=false)
+	@OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "payment_id", nullable=true)
 	private PaymentTbl paymentTbl;
 
 	//bi-directional many-to-one association to GroupTbl
 	@ManyToOne
 	@JoinColumn(name="group_id", nullable=false)
 	private GroupTbl groupTbl;
+
+	//bi-directional many-to-one association to MealPlanTbl
+	@OneToMany(mappedBy="registrationTbl",  fetch = FetchType.EAGER)
+	private Set<AttendingTbl> attendingTbls;
+
+	public Set<AttendingTbl> getAttendingTbls() {
+		return attendingTbls;
+	}
+
+	public void setAttendingTbls(Set<AttendingTbl> attendingTbls) {
+		this.attendingTbls = attendingTbls;
+	}
 
 	public RegistrationTbl() {
 	}
@@ -83,14 +117,6 @@ public class RegistrationTbl implements Serializable {
 
 	public void setId(int id) {
 		this.id = id;
-	}
-
-	public Date getAttendingDate() {
-		return this.attendingDate;
-	}
-
-	public void setAttendingDate(Date attendingDate) {
-		this.attendingDate = attendingDate;
 	}
 
 	public BigDecimal getDiscountPercentage() {

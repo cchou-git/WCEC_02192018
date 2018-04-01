@@ -2,6 +2,7 @@
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
 	<persistence-unit name="WCECRetreat">
 		<class>org.wcec.retreat.entity.AccessLevel</class>
+		<class>org.wcec.retreat.entity.AttendingTbl</class>
 		<class>org.wcec.retreat.entity.AddressTbl</class>
 		<class>org.wcec.retreat.entity.BedTypeTbl</class>
 		<class>org.wcec.retreat.entity.BuildingTbl</class>
@@ -24,8 +25,6 @@
 		<class>org.wcec.retreat.entity.RegistrationTbl</class>
 		<class>org.wcec.retreat.entity.RoomTbl</class>
 		<class>org.wcec.retreat.entity.UserLogin</class>
-		<class>org.wcec.retreat.entity.UserTbl</class>
-		<class>org.wcec.retreat.entity.User</class> 
-		<class>org.wcec.retreat.entity.Category</class>  
+		<class>org.wcec.retreat.entity.UserTbl</class>  
 	</persistence-unit>
 </persistence>

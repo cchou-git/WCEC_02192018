@@ -57,6 +57,12 @@ public class PersonTbl implements Serializable {
 
 	@Column(name="primary_group_id")
 	private int primaryGroupId;
+	
+	@Column(name="is_adult_flag")
+	private Boolean isAdultFlag;
+
+	@Column(name="is_greater_than_five")
+	private Boolean isGreaterThanFive;
 
 	//bi-directional many-to-one association to EmailTbl
 	@OneToMany(mappedBy="personTbl",  fetch = FetchType.EAGER)
@@ -69,10 +75,6 @@ public class PersonTbl implements Serializable {
 	//bi-directional many-to-one association to LodgingAssignmentTbl
 	@OneToMany(mappedBy="personTbl",  fetch = FetchType.EAGER)
 	private Set<LodgingAssignmentTbl> lodgingAssignmentTbls;
-
-	//bi-directional many-to-one association to PaymentTbl
-	@OneToMany(mappedBy="personTbl",  fetch = FetchType.EAGER)
-	private Set<PaymentTbl> paymentTbls;
 
 	//bi-directional many-to-one association to GroupTbl
 	@ManyToOne
@@ -230,28 +232,6 @@ public class PersonTbl implements Serializable {
 		return lodgingAssignmentTbl;
 	}
 
-	public Set<PaymentTbl> getPaymentTbls() {
-		return this.paymentTbls;
-	}
-
-	public void setPaymentTbls(Set<PaymentTbl> paymentTbls) {
-		this.paymentTbls = paymentTbls;
-	}
-
-	public PaymentTbl addPaymentTbl(PaymentTbl paymentTbl) {
-		getPaymentTbls().add(paymentTbl);
-		paymentTbl.setPersonTbl(this);
-
-		return paymentTbl;
-	}
-
-	public PaymentTbl removePaymentTbl(PaymentTbl paymentTbl) {
-		getPaymentTbls().remove(paymentTbl);
-		paymentTbl.setPersonTbl(null);
-
-		return paymentTbl;
-	}
-
 	public GroupTbl getGroupTbl() {
 		return this.groupTbl;
 	}
@@ -320,4 +300,54 @@ public class PersonTbl implements Serializable {
 		return registrationTbl;
 	}
 
+	public Boolean getIsAdultFlag() {
+		return isAdultFlag;
+	}
+
+	public void setIsAdultFlag(Boolean isAdultFlag) {
+		this.isAdultFlag = isAdultFlag;
+	}
+
+	public Boolean getIsGreaterThanFive() {
+		return isGreaterThanFive;
+	}
+
+	public void setIsGreaterThanFive(Boolean isGreaterThanFive) {
+		this.isGreaterThanFive = isGreaterThanFive;
+	}
+	
+	@Column(name="is_less_than_five")
+	private Boolean isLessThanFive;
+
+	@Column(name="is_five_to_twelve")
+	private Boolean isFiveToTwelve;
+	
+	@Column(name="is_thirteen_to_eighteen")
+	private Boolean isThirteenToEighteen;
+
+	public Boolean getIsLessThanFive() {
+		return isLessThanFive;
+	}
+
+	public void setIsLessThanFive(Boolean isLessThanFive) {
+		this.isLessThanFive = isLessThanFive;
+	}
+
+	public Boolean getIsFiveToTwelve() {
+		return isFiveToTwelve;
+	}
+
+	public void setIsFiveToTwelve(Boolean isFiveToTwelve) {
+		this.isFiveToTwelve = isFiveToTwelve;
+	}
+
+	public Boolean getIsThirteenToEighteen() {
+		return isThirteenToEighteen;
+	}
+
+	public void setIsThirteenToEighteen(Boolean isThirteenToEighteen) {
+		this.isThirteenToEighteen = isThirteenToEighteen;
+	}
+	
+	
 }

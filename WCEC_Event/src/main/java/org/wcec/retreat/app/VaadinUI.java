@@ -5,33 +5,49 @@ import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.JAXBIntrospector;
 import javax.xml.bind.Unmarshaller;
 
+import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.DurationFieldType;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.StringUtils;
+import org.wcec.retreat.authentication.AuthService;
 import org.wcec.retreat.authentication.PublicComponent;
+import org.wcec.retreat.authentication.UserService;
 import org.wcec.retreat.domain.generated.AllDomainTable;
 import org.wcec.retreat.domain.generated.WCECDomainTable;
+import org.wcec.retreat.entity.AccessLevel;
 import org.wcec.retreat.entity.AddressTbl;
+import org.wcec.retreat.entity.BuildingTbl;
 import org.wcec.retreat.entity.ChurchTbl;
 import org.wcec.retreat.entity.EventTbl;
 import org.wcec.retreat.entity.GroupTbl;
+import org.wcec.retreat.entity.RegistrationTbl;
+import org.wcec.retreat.entity.RoomTbl;
+import org.wcec.retreat.entity.UserTbl;
 import org.wcec.retreat.extendedgui.MyTableMaintenanceDesign;
 import org.wcec.retreat.gui.vaadin.extended.MyListSelect;
 import org.wcec.retreat.model.RegistrationRecord;
 import org.wcec.retreat.model.RegistrationRecordCollection;
 import org.wcec.retreat.repo.AccessLevelRepo;
 import org.wcec.retreat.repo.AddressTblRepo;
+import org.wcec.retreat.repo.AttendingTblRepo;
 import org.wcec.retreat.repo.BedTypeTblRepo;
 import org.wcec.retreat.repo.BuildingTblRepo;
 import org.wcec.retreat.repo.ChurchTblRepo;
@@ -58,16 +74,18 @@ import org.wcec.retreat.repo.UserTblRepo;
 import com.google.common.collect.Lists;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
+import com.vaadin.server.ClassResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Setter;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
@@ -76,18 +94,25 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.renderers.ComponentRenderer;
-import com.vaadin.ui.renderers.TextRenderer;
+import com.vaadin.ui.themes.ValoTheme;
 
 //@Theme("base")
 @SpringUI
 public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
+	
+	public static final int ADMIN_LEVEL = 200;
+	
+	
 	@Autowired
 	AccessLevelRepo                            TheAccessLevelRepo;
 	
 	@Autowired
 	AddressTblRepo                             TheAddressTblRepo;
 	
+	@Autowired
+	AttendingTblRepo                           TheAttendingTblRepo;
+
+
 	@Autowired
 	BedTypeTblRepo                             TheBedTypeTblRepo;
 	
@@ -158,6 +183,11 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	public static List<ChurchTbl> AllChurch;
 	public static List<AddressTbl> AllAddress;
 	public static List<GroupTbl> AllGroup;
+	
+	 
+		
+
+	 
 	 
 	/**
 	 * 
@@ -167,6 +197,9 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	private final EventTblRepo eventTblRepo;
 
 	private final EventTblEditor editor;
+	
+	public static final String SESSION_GROUP_ID = "SESSION_GROUP_ID";
+	public static final String SESSION_ACTIVE_EVENT = "SESSION_ACTIVE_EVENT";
 
 	 
 
@@ -211,24 +244,169 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	
 	boolean loginFlag = false;
 	
+	public static EventTbl TheActiveEvent;
+	
+	
+	protected void setupData() {
+		TheApplicationContext = appContext; // kludge
+		TheEntityManager = entityManager;
+		TheEMF = emf;
+		adminManager = new AdminDisplayManager();
+		System.out.println( "init()");
+		
+		if (AllChurch == null) {
+			AllChurch = TheChurchTblRepo.findAll();
+			AllGroup = TheGroupTblRepo.findAll();
+			AllAddress = TheAddressTblRepo.findAll();
+		}
+		List <EventTbl> eventList = TheEventTblRepo.findAllByOrderByStartDtDesc();
+		if (eventList != null) {
+			// Major kludge - relying on this for 2018 !!
+			if (TheActiveEvent == null || activeEventDateList == null) {
+				TheActiveEvent = eventList.get(0);
+				VaadinSession.getCurrent().setAttribute(SESSION_ACTIVE_EVENT, TheActiveEvent);
+				Date startDate0 = TheActiveEvent.getStartDt();
+				Date endDate0 = TheActiveEvent.getEndDt();
+				DateTime startDate = new DateTime(startDate0);
+				DateTime endDate = new DateTime(endDate0);
+				activeEventDateList = new ArrayList<DateTime> ();
+				int days = Days.daysBetween(startDate, endDate).getDays() + 1;
+				for (int i=0; i < days; i++) {
+				    DateTime d = startDate.withFieldAdded(DurationFieldType.days(), i);
+				    activeEventDateList.add(d);
+				}
+			}
+		} 
+	}
+	
+	String currentUserName;
+	RegistrationTbl currentRegistrationRecord; // whoever logs on to the system...
+	UIHelper uiHelper = new UIHelper();
+	
+	// Admin related display is managed by this.
+	AdminDisplayManager adminManager;
+	
+	public void processUserLogin(String userName) {
+		setupData();
+		currentUserName = userName;
+		UserTbl theUser = (UserTbl) VaadinSession.getCurrent().getAttribute(UserService.SESSION_USER);
+		AccessLevel level = theUser.getAccessLevel();
+		if (level.getLevel() == ADMIN_LEVEL) {
+			List<RegistrationTbl> records = TheRegistrationTblRepo.findByNoLodging(TheActiveEvent.getId());
+			displayAdminPage(records);
+		} else {
+			// find out whether the user has been registrated or not
+			currentRegistrationRecord = TheRegistrationTblRepo.findByChineseName(TheActiveEvent.getId(), this.currentUserName);
+			if (currentRegistrationRecord != null) {
+				Integer groupID = currentRegistrationRecord.getGroupTbl().getId();
+				VaadinSession.getCurrent().setAttribute(SESSION_GROUP_ID, groupID);
+				// if yes, find out about its registration group (14)	
+				List<RegistrationTbl> records = TheRegistrationTblRepo.findByGroupId(currentRegistrationRecord.getGroupTbl().getId());
+				displayUserPage(records);
+			} else {
+					displayUserPage(null);
+			}
+		}
+	}
+	
 	@Override
 	protected void init(VaadinRequest vaadinRequest) {
-	System.out.println( "init()");
+		setupData() ;
+		PublicComponent wPubComp = new PublicComponent( 
+				TheUserLoginRepo, 
+				TheUserTblRepo, 
+				ThePersonTblRepository );
+		if ( !wPubComp.isUserAuthenticated()) {
+				setContent(wPubComp);
+			} else {
+				currentUserName = (String) VaadinSession.getCurrent().getAttribute(AuthService.SESSION_USERNAME);
+				// find out whether the user has been registrated or not
+				processUserLogin(currentUserName);
+			}
+	}
+	
+	final Grid<RoomTbl> roomGrid = new Grid<RoomTbl>(RoomTbl.class);
+	
+	List<BuildingTbl> bList; // building list
+	ListSelect<String> theListSelect; // the ListSelect of the building
+	BuildingChangeListener buildingSelectListener;// listens to building selection change
+	
+	public void displayAdminPage(List<RegistrationTbl> registrationRecords) {
+		if (bList == null) {
+			bList = this.TheBuildingTblRepo.findAll();
+		}
+		HorizontalLayout mainLayout = new HorizontalLayout();
+		VerticalLayout leftHandSide = new VerticalLayout();
+		VerticalLayout middleSection =  new VerticalLayout();
+		VerticalLayout rightHandSide=  new VerticalLayout(); 
+				 
+		final Label labelTitle = new Label("WCEC Retreat Registration Form - Admin");
+		mainLayout.addComponent(labelTitle);
 
-	PublicComponent wPubComp = new PublicComponent( 
-	TheUserLoginRepo, 
-	TheUserTblRepo, 
-	ThePersonTblRepository );
+//		final Label labelPerson = new Label("Add a person: ");
 
-	if ( !wPubComp.isUserAuthenticated()) {
-	setContent(wPubComp);
-	} else {
-	showPrivateComponent();
+//		HorizontalLayout hLayout = new HorizontalLayout(labelPerson, newButton);
+//		hLayout.setVisible(true);
+//		hLayout.setHeight(100, Unit.PERCENTAGE);
+//		mainLayout.addComponent(hLayout);
+		
+		theListSelect = new ListSelect<String>("Select Building:");  
+		List<String> buildingNameList = new ArrayList<String>();
+		boolean first = true;
+		for (BuildingTbl eachBuilding : bList) {
+			buildingNameList.add(eachBuilding.getName()); 
+		}
+		theListSelect.setItems(buildingNameList);
+		buildingSelectListener = new BuildingChangeListener(roomGrid, bList);
+		theListSelect.addValueChangeListener(buildingSelectListener); 
+		roomGrid.setColumns("roomNo");
+		leftHandSide.addComponent(theListSelect);
+		leftHandSide.addComponent(roomGrid);
+		this.populateRegistrationGrid(leftHandSide, registrationRecords); 
+		
+		Button assignButton = new Button("Assign"); 
+		assignButton.setStyleName(ValoTheme.BUTTON_LINK);
+		assignButton.setIcon(new ClassResource("/images/assign_arrow.PNG"));
+		assignButton.setWidth(280, Unit.PIXELS);
+		assignButton.setHeight(200, Unit.PIXELS);
+		AssignLodgingListener assignLodgingListener = new AssignLodgingListener(mgr, mgr2, registrationGrid, registrationGrid2);
+		assignLodgingListener.setCallback(buildingSelectListener);
+		assignLodgingListener.setLodginRepo(TheLodgingAssignmentTblRepo);
+		assignLodgingListener.setRegistrationRepo(TheRegistrationTblRepo);
+		assignButton.addClickListener(assignLodgingListener);
+		 // button.addClickListener(e -> System.out.println("click"));
+		Button unassignButton = new Button("Unassign");
+		unassignButton.setStyleName(ValoTheme.BUTTON_LINK);
+		unassignButton.setIcon(new ClassResource("/images/unassign_arrow.png"));
+		unassignButton.setWidth(280, Unit.PIXELS);
+		unassignButton.setHeight(200, Unit.PIXELS);
+		UnAssignLodgingListener unAssignLodgingListener = new UnAssignLodgingListener(mgr, mgr2, registrationGrid, registrationGrid2);
+		unAssignLodgingListener.setLodginRepo(TheLodgingAssignmentTblRepo);
+		unAssignLodgingListener.setRegistrationRepo(TheRegistrationTblRepo);
+		unassignButton.addClickListener(unAssignLodgingListener);
+		middleSection.addComponent(assignButton);
+		middleSection.addComponent(unassignButton);
+		List<RegistrationTbl> list = TheRegistrationTblRepo.findByHasLodging(TheActiveEvent.getId());
+		mgr2.populateFromDatabase(TheActiveEvent, list);
+		adminManager.populateAssignedLodgingRegistrationGrid(rightHandSide, bList, mgr2);
+//		mainLayout.addComponent(submitButton);
+		mainLayout.addComponent(leftHandSide);
+		mainLayout.addComponent(middleSection); 
+		mainLayout.addComponent(rightHandSide);
+		
+		setContent(mainLayout); 
+	}
+	
+	/**
+	 * 
+	 * @param aTable
+	 */
+	private void populateRoomGrid(BuildingTbl aTable) {
+		
 	}
 
-	}
 
-	public void showPrivateComponent() {
+	public void displayUserPage(List<RegistrationTbl> registrationRecords) {
 		VerticalLayout mainLayout = new VerticalLayout();
 		final Label labelTitle = new Label("WCEC Retreat Registration Form");
 		// labelTitle.setStyleName("h1");
@@ -240,17 +418,13 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		hLayout.setVisible(true);
 		hLayout.setHeight(100, Unit.PERCENTAGE);
 		mainLayout.addComponent(hLayout);
-		this.populateRegistrationGrid(mainLayout);
+		this.populateRegistrationGrid(mainLayout, registrationRecords);
 		mainLayout.addComponent(submitButton);
-		setContent(mainLayout);
-
-		}
+		setContent(mainLayout); 
+	}
 
 		
-	protected void init_old(VaadinRequest request) {
-		AllChurch = TheChurchTblRepo.findAll();
-		AllGroup = TheGroupTblRepo.findAll();
-		AllAddress = TheAddressTblRepo.findAll();
+	protected void init_old(VaadinRequest request, List<RegistrationTbl> registrationRecords) {
 		/*if(!loginFlag) {
 			mMyLoginWindow = new LoginWindow(TheUserLoginRepo, TheUserTblRepo, ThePersonTblRepository);
 			addWindow(mMyLoginWindow);
@@ -265,7 +439,7 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 			hLayout.setVisible(true); 
 			hLayout.setHeight(100, Unit.PERCENTAGE);
 			mainLayout.addComponent(hLayout); 
-			this.populateRegistrationGrid(mainLayout); 
+			this.populateRegistrationGrid(mainLayout, registrationRecords); 
 			mainLayout.addComponent(submitButton);
 			setContent(mainLayout);
 		//}
@@ -288,7 +462,17 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	@Autowired
 	private ApplicationContext appContext;
 	
-	 
+	
+	@Autowired
+	private EntityManagerFactory emf;
+	
+	public static EntityManagerFactory TheEMF;
+	
+	@Autowired
+    private EntityManager entityManager;
+
+	public static ApplicationContext TheApplicationContext;
+	public static EntityManager TheEntityManager;
 		
 	 
 
@@ -486,55 +670,25 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	}
 
 
+	List<DateTime> activeEventDateList; 
 	
-	 
-	RegistrationRecordCollection mgr =  new RegistrationRecordCollection();
-	final Grid<RegistrationRecord> registrationGrid = new Grid(RegistrationRecord.class); 
+	RegistrationRecordCollection mgr =  new RegistrationRecordCollection();   // this is the from manager
+	RegistrationRecordCollection mgr2 =  new RegistrationRecordCollection();  // this is used by admin assignment
+	final Grid<RegistrationRecord> registrationGrid = new Grid(RegistrationRecord.class);
+	final Grid<RegistrationRecord> registrationGrid2= new Grid(RegistrationRecord.class); // this is used for admin containing lodgingssignments
+		
 	/**
 	 * Add a grid for the implied domain table to the layout.
 	 * 
 	 * @param layout
 	 */
-	void populateRegistrationGrid(VerticalLayout mLayout) { 
-		// instead of new Grid(beanType)
-		// PropertySet<RegistrationRecord> ps = BeanPropertySet.get(RegistrationRecord.class);
-		 
-		registrationGrid.setColumns("greaterThanFiveYearsOldFlag", "lastName", "firstName","chineseName", "gender", 
-				 "adultFlag", "specialRequest", 
-				"freeWillOffering", "needFancialFlag", "fullTimeFlag", "attendingDates");
-//		registrationGrid.addColumn("chineseName").setCaption(RegistrationRecordLabel.ChineseNameLabel);
-//		registrationGrid.addColumn("firstName").setCaption(RegistrationRecordLabel.EnglishFirstNameLabel);
-//		registrationGrid.addColumn("lastName").setCaption(RegistrationRecordLabel.EnglishLastNameLabel);
-//		registrationGrid.addColumn("gender").setCaption(RegistrationRecordLabel.GenderLabel);
-//		registrationGrid.addColumn("adultFlag").setCaption(RegistrationRecordLabel.AdultLabel);
-//		registrationGrid.addColumn("greaterThanFiveYearsOldFlag").setCaption(RegistrationRecordLabel.GreaterThanFiveYearOldLabel);
-//		registrationGrid.addColumn("freeWillOffering").setCaption(RegistrationRecordLabel.DonationLabel);
-//		registrationGrid.addColumn("age").setCaption(RegistrationRecordLabel.AgeLabel);
-//		registrationGrid.addColumn("specialRequest").setCaption(RegistrationRecordLabel.SpecialNeedLabel);
-//		registrationGrid.addColumn("needFancialFlag").setCaption(RegistrationRecordLabel.FinancialNeedLabel);
-		
-		/* Sample code 
-		 * 
-		 * 
-		 * 
-		 * Column<Person, Address> column = grid.addColumn(Person::getAddress);
-// alternatively, the presentation provider can be given as an extra parameter
-// to addColumn()
-column.setRenderer(
-    address -> address.getCity() + " " + address.getCountry(),
-    new TextRenderer());
-column.setCaption("Address");
-column.setEditorComponent(new AddressField(), Person::setAddress);
-
-		 */
-		
-		//registrationGrid.setSelectionMode(SelectionMode.MULTI);
-		
-		TextRenderer renderer = new TextRenderer();
-		
-		
-		
-		registrationGrid.setItems(mgr.populateDefaultRecords());
+	void populateRegistrationGrid(VerticalLayout mLayout, List<RegistrationTbl> aList) { 
+		registrationGrid.setColumns("lastName", "firstName","chineseName");
+		if (aList == null) {
+			registrationGrid.setItems(mgr.populateDefaultRecords(TheActiveEvent));
+		} else {
+			registrationGrid.setItems(mgr.populateFromDatabase(TheActiveEvent, aList));
+		}
 		registrationGrid.setHeight(300, Unit.PIXELS);
 		registrationGrid.setWidth(100, Unit.PERCENTAGE);
 		registrationGrid.setVisible(true);
@@ -552,75 +706,29 @@ column.setEditorComponent(new AddressField(), Person::setAddress);
 		registrationGrid.getColumn("firstName")
 		        .setEditorComponent(new TextField())   // need a second argument for the setter!!
 		        .setExpandRatio(1);  
-		TextField aField = new TextField();
-		registrationGrid.getColumn("gender")
-        .setEditorComponent(aField)   // need a second argument for the setter!!
-        .setExpandRatio(1);  
-		
-		ListSelect select = new ListSelect("Attending Date");
-		select.setItems(RegistrationRecord.AttendingDates);
-		registrationGrid.getColumn("attendingDates")
-        .setEditorComponent(select)   // need a second argument for the setter!!
-        .setExpandRatio(1);  
-		
-		
-		
-		
-		CheckBox adultFlagCheckBox = new CheckBox();
-		
-		registrationGrid.getColumn("adultFlag")
-        .setEditorComponent(adultFlagCheckBox)    
-        .setExpandRatio(1);
-		
-		CheckBox fullTimeFlagCheckBox = new CheckBox();
-		
-		registrationGrid.getColumn("fullTimeFlag")
-        .setEditorComponent(fullTimeFlagCheckBox) 
-        .setExpandRatio(1);
-		
-		
-		
-		CheckBox greaterThanFiveYearsOldFlagCheckBox = new CheckBox();
-		
-		//TextField greaterThanFiveYearsOldFlagField = new TextField();
-		
-		registrationGrid.getColumn("greaterThanFiveYearsOldFlag")
-        .setEditorComponent(greaterThanFiveYearsOldFlagCheckBox)   // need a second argument for the setter!!
-        .setExpandRatio(1); 
-		
-		
-		registrationGrid.getColumn("specialRequest")
-        .setEditorComponent(new TextField())   // need a second argument for the setter!!
-        .setExpandRatio(1); 
-		
-		
-		TextField freeWillOfferingField = new TextField();
-		
-		registrationGrid.getColumn("freeWillOffering")
-        .setEditorComponent(freeWillOfferingField)   // need a second argument for the setter!!
-        .setExpandRatio(1); 
-		
-		CheckBox needFancialFlagCheckBox = new CheckBox();
-
-		registrationGrid.getColumn("needFancialFlag")
-        .setEditorComponent(needFancialFlagCheckBox)   // need a second argument for the setter!!
-        .setExpandRatio(1); 
-		
-		Column aColumn = registrationGrid.getColumn("adultFlag");
-		ComponentRenderer aCompRenderer = new ComponentRenderer();
-		/*aCompRenderer.
-		aColumn.setRenderer(renderer);
-		registrationGrid.addComponentColumn(record -> {
-		      Checkbox chkBox = new Checkbox();
-		      chkBox.addClickListener(click ->
-		      setAdultFlagForRegistrationRecord(record));
-		      return chkBox;
-		});*/  
+		 
+		List<String> genderList = new ArrayList<String>();
+		genderList.add("M");
+		genderList.add("F");
+		uiHelper.addSelectPropertyColumn(registrationGrid, "genders", "Gender", genderList);
+		uiHelper.addBooleanPropertyColumn(registrationGrid, "greaterThanFiveYearsOldFlag", "Greater Than 5 yrs?");
+		uiHelper.addBooleanPropertyColumn(registrationGrid, "adultFlag", "Is Adult?");
+		uiHelper.addBooleanPropertyColumn(registrationGrid, "fullTimeFlag", "Full Time?");
+	 	
+	 	String dateCaption = "";
+	 	for (int i = 0; i < this.activeEventDateList.size(); i++) {
+	 		dateCaption = formatJodaDateTime(this.activeEventDateList.get(i));
+	 		uiHelper.addBooleanPropertyColumn(registrationGrid, "attendingDate" + (i+1), dateCaption);
+	 	}   
+	 	
+	 	uiHelper.addTextPropertyColumn(registrationGrid, "specialRequest", "Special Request"); 
+	 	uiHelper.addTextPropertyColumn(registrationGrid, "freeWillOffering", "Free Will Offering"); 
+	 	uiHelper.addBooleanPropertyColumn(registrationGrid, "needFancialFlag", "Need Financial Support");
 		
 		registrationGrid.addComponentColumn(record -> {
 		      Button button = new Button("Remove!");
 		      button.addClickListener(click ->
-		      	removeARegistrationRecord(record));
+		      	removeARegistrationRecord(record)); 
 		      return button;
 		}); 
 		
@@ -637,31 +745,31 @@ column.setEditorComponent(new AddressField(), Person::setAddress);
         }); 
 		
 		mLayout.addComponent(registrationGrid); 
-		 
-		
 		newButton.addClickListener(click -> {
-			mgr.addRecord(new RegistrationRecord());
+			RegistrationRecord record = new RegistrationRecord();
+			record.initialize(TheActiveEvent);
+			mgr.addRecord(record);
 			registrationGrid.setItems(mgr.getCollection()); 
 		});
-
-		submitButton.addClickListener(click -> {
-			RegistrationRecord problemRecord = mgr.validateInput(TheJustPersonEntityRepository, ThePersonTblRepository);
-			if (null == problemRecord) {
-				if (upsertRegistration()) {
-					/* TODO 
-					 * Ensure there are 
-					 */
-					Notification.show("Thank you for registering!"); 			
-				} else {
-					Notification.show("There are issues with the input data. Please fix them an then submit again!"); 	
-				}
-			} else {
-				Notification.show("There are issues with the input data. Please fix them an then submit again!"); 	
-			}
-		});
-
-		
+		RegistrationSubmitButtonListener buttonListener = new RegistrationSubmitButtonListener(mgr, TheJustPersonEntityRepository);
+		buttonListener.setPersonRepo(ThePersonTblRepository);
+		buttonListener.setEmailRepo(TheEmailTblRepo);
+		buttonListener.setUserRepo(TheUserTblRepo);
+		buttonListener.setRegistrationRepo(TheRegistrationTblRepo);
+		buttonListener.setGroupRepo(TheGroupTblRepo);
+		buttonListener.setAttendingTblRepo(TheAttendingTblRepo);
+		submitButton.addClickListener(buttonListener);
 	}
+	
+	private String formatJodaDateTime(DateTime jodatime) { 
+		DateTimeFormatter dtf = DateTimeFormat.forPattern("MM/dd/yyyy HH:mm:ss");
+		// Parsing the date  
+		DateTimeFormatter dtfOut = DateTimeFormat.forPattern("MM/dd/yyyy");
+		// Printing the date
+		return dtfOut.print(jodatime);
+	}
+	
+	
 	
 	
 	void removeARegistrationRecord(RegistrationRecord aRecord) {
@@ -670,7 +778,12 @@ column.setEditorComponent(new AddressField(), Person::setAddress);
 		registrationGrid.setItems(mgr.getCollection()); 
 	}
 	
-	void setAdultFlagForRegistrationRecord(RegistrationRecord aRecord) {
+	void setAdultFlagForRegistrationRecord(RegistrationRecord aRecord, CheckBox cbox) {
+		if (cbox.getValue()) {
+			aRecord.setAdultFlag(true);
+		} else {
+			aRecord.setAdultFlag(false);
+		}
 		/*
 		mgr.removeRecord(aRecord);
 		registrationGrid.setItems(mgr.getCollection());
@@ -684,5 +797,22 @@ column.setEditorComponent(new AddressField(), Person::setAddress);
 		 */
 		return true;
 	}
-	
+	 
+	/**
+	 * For selecting a building.
+	 * 
+	 * @return
+	 */
+	public BuildingTbl getSelectedBuilding() {
+		return buildingSelectListener.getSelectedBuilding();
+	}
+
+	/**
+	 * For selecting a room for assignment.
+	 * @return
+	 */
+	public Set<RoomTbl> getSelectedRoom() {
+		return roomGrid.getSelectedItems();
+	}
+		
 }

@@ -35,10 +35,8 @@ public class PaymentTbl implements Serializable {
 	@Column(name="paid_in_full")
 	private byte paidInFull;
 
-	//bi-directional many-to-one association to PersonTbl
-	@ManyToOne
-	@JoinColumn(name="payer_id", nullable=false)
-	private PersonTbl personTbl;
+	@Column(name="payment_type_tx")
+	private String paymentTextTx;
 
 	//bi-directional many-to-one association to RegistrationTbl
 	@OneToMany(mappedBy="paymentTbl")
@@ -87,12 +85,13 @@ public class PaymentTbl implements Serializable {
 		this.paidInFull = paidInFull;
 	}
 
-	public PersonTbl getPersonTbl() {
-		return this.personTbl;
+	
+	public String getPaymentTextTx() {
+		return paymentTextTx;
 	}
 
-	public void setPersonTbl(PersonTbl personTbl) {
-		this.personTbl = personTbl;
+	public void setPaymentTextTx(String paymentTextTx) {
+		this.paymentTextTx = paymentTextTx;
 	}
 
 	public List<RegistrationTbl> getRegistrationTbls() {

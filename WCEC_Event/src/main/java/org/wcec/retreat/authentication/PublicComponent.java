@@ -1,9 +1,13 @@
 package org.wcec.retreat.authentication;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.wcec.retreat.app.VaadinUI;
+import org.wcec.retreat.entity.RegistrationTbl;
 
 import com.vaadin.event.ShortcutAction;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.*;
 
 /**
@@ -48,7 +52,9 @@ public class PublicComponent extends CustomComponent {
 	private void onLogin(String username, String password, boolean rememberMe) {
 		if (mAuthService.login(username, password, rememberMe)) {
 			VaadinUI ui = (VaadinUI) UI.getCurrent();
-			ui.showPrivateComponent();
+			// find out whether the user has been registrated or not
+			
+			ui.processUserLogin(username);
 		} 
 	}
 

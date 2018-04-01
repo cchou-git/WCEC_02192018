@@ -12,6 +12,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.wcec.retreat.entity.AccessLevel;
 import org.wcec.retreat.entity.EventTypeTbl;
@@ -22,8 +23,6 @@ import org.wcec.retreat.repo.EventTypeTblRepo;
 @EntityScan(basePackages="org.wcec.retreat.entity")
 @EnableJpaRepositories("org.wcec.retreat.repo")
 public class Application {
-	@Autowired
-    private EntityManager entityManager;
 	
 	private static final Logger log = LoggerFactory.getLogger(Application.class);
 
@@ -33,6 +32,8 @@ public class Application {
 	
 	@Bean
 	public CommandLineRunner demo2(AccessLevelRepo repository) {
+		//System.out.println("Entity Manager persistence unit name = " + entityManager.getProperties());
+		
 		return (args) -> {
 			// save a couple of customers
 			List<AccessLevel> theList = repository.findAll();

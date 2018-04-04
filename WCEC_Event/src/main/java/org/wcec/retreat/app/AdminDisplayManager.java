@@ -11,30 +11,32 @@ import org.wcec.retreat.model.RegistrationRecordCollection;
 
 import com.vaadin.server.Setter;
 import com.vaadin.server.Sizeable.Unit;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Grid.SelectionMode;
 
 public class AdminDisplayManager {
-	final Grid<RegistrationRecord> registrationGrid = new Grid(RegistrationRecord.class); 
 	RegistrationRecordCollection mgr; 
+	Grid<RegistrationRecord> registrationGrid;
 	UIHelper uiHelper = new UIHelper();
 
-	public void populateAssignedLodgingRegistrationGrid(VerticalLayout mLayout, List<BuildingTbl> bList, RegistrationRecordCollection mgrOnRight) {
+	public void populateAssignedLodgingRegistrationGrid(VerticalLayout mLayout, List<BuildingTbl> bList, RegistrationRecordCollection mgrOnRight, final Grid<RegistrationRecord> regGrid) {
 		mgr = mgrOnRight;
+		registrationGrid = regGrid;
 		registrationGrid.setColumns(
+				"buildingName",
 				"roomNumber", 
 				"formNumber",
 				"chineseName", 
-				"registrationEnglishName",
-				"age",
+				"englishName", 
 				"paymentAmount",
 				"paymentExpected", 
 				"paymentMethod",
 				"paymentLogDate");
-				
-		
 		registrationGrid.setHeight(900, Unit.PIXELS);
 		registrationGrid.setWidth(100, Unit.PERCENTAGE);
 		registrationGrid.setVisible(true);
@@ -70,8 +72,17 @@ public class AdminDisplayManager {
             	ex.printStackTrace();
             }
         });
-		 
-		registrationGrid.setItems(mgr.getCollection());		
+		registrationGrid.setSelectionMode(SelectionMode.MULTI);
+		registrationGrid.addComponentColumn(record -> {
+		      Button button = new Button("Payment!");
+		      button.addClickListener(click ->
+		      	makePaymentRegistrationRecord(record)); 
+		      return button;
+		}); 
+				 
+		registrationGrid.setItems(mgr.getCollection());
+		Label aLabel = new Label("Assigned registrants:");
+		mLayout.addComponent(aLabel);
 		mLayout.addComponent(registrationGrid); 
 			
 	}
@@ -135,5 +146,14 @@ public class AdminDisplayManager {
             }
         }); 
 		mLayout.addComponent(registrationGrid); 
+	}
+	
+	/**
+	 * Make payment arrangement.
+	 * @param aRecord
+	 */
+	void makePaymentRegistrationRecord(RegistrationRecord aRecord) {
+		// Plug in Jay's code here.
+		
 	}
 }

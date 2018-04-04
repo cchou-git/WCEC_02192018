@@ -74,6 +74,7 @@ import org.wcec.retreat.repo.UserTblRepo;
 import com.google.common.collect.Lists;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
+import com.vaadin.navigator.Navigator;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Setter;
@@ -81,11 +82,11 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
@@ -309,9 +310,20 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		}
 	}
 	
+	Navigator navigator;
+	public static final String LOGOUT_VIEW = "LOGOUT";
+	
+	public Navigator getNavigator() { return navigator; }
+	
 	@Override
 	protected void init(VaadinRequest vaadinRequest) {
 		setupData() ;
+		//navigator = new Navigator(this, this);
+
+		//navigator.addView("", this);
+        // Create and register the views
+        //navigator.addView(LOGOUT_VIEW, new LogoutView());
+
 		PublicComponent wPubComp = new PublicComponent( 
 				TheUserLoginRepo, 
 				TheUserTblRepo, 
@@ -335,20 +347,18 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		if (bList == null) {
 			bList = this.TheBuildingTblRepo.findAll();
 		}
-		HorizontalLayout mainLayout = new HorizontalLayout();
+		VerticalLayout mainLayout = new VerticalLayout(); 
+		HorizontalLayout belowMainLayout = new HorizontalLayout();
 		VerticalLayout leftHandSide = new VerticalLayout();
 		VerticalLayout middleSection =  new VerticalLayout();
 		VerticalLayout rightHandSide=  new VerticalLayout(); 
 				 
 		final Label labelTitle = new Label("WCEC Retreat Registration Form - Admin");
 		mainLayout.addComponent(labelTitle);
-
-//		final Label labelPerson = new Label("Add a person: ");
-
-//		HorizontalLayout hLayout = new HorizontalLayout(labelPerson, newButton);
-//		hLayout.setVisible(true);
-//		hLayout.setHeight(100, Unit.PERCENTAGE);
-//		mainLayout.addComponent(hLayout);
+		
+		mainLayout.addComponent(logoutButton);
+		LogoutListener logoutListener = new LogoutListener(this);
+		logoutButton.addClickListener(logoutListener);
 		
 		theListSelect = new ListSelect<String>("Select Building:");  
 		List<String> buildingNameList = new ArrayList<String>();
@@ -360,26 +370,32 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		buildingSelectListener = new BuildingChangeListener(roomGrid, bList);
 		theListSelect.addValueChangeListener(buildingSelectListener); 
 		roomGrid.setColumns("roomNo");
-		leftHandSide.addComponent(theListSelect);
-		leftHandSide.addComponent(roomGrid);
-		this.populateRegistrationGrid(leftHandSide, registrationRecords); 
+		roomGrid.setWidth("220");
+		roomGrid.setHeight("280");
+		HorizontalLayout smallControlLayout = new HorizontalLayout();
+		smallControlLayout.addComponent(theListSelect);
+		smallControlLayout.addComponent(roomGrid);
+		leftHandSide.addComponent(smallControlLayout);
+		Label aLabel = new Label("Unassigned registrants:");
+		leftHandSide.addComponent(aLabel);
+		this.populateRegistrationGrid(leftHandSide, registrationRecords, false); 
 		
-		Button assignButton = new Button("Assign"); 
-		assignButton.setStyleName(ValoTheme.BUTTON_LINK);
-		assignButton.setIcon(new ClassResource("/images/assign_arrow.PNG"));
-		assignButton.setWidth(280, Unit.PIXELS);
-		assignButton.setHeight(200, Unit.PIXELS);
+		Button assignButton = new Button("Assign ->"); 
+		//assignButton.setStyleName(ValoTheme.BUTTON_LINK);
+		//assignButton.setIcon(new ClassResource("/images/assign_arrow.PNG"));
+		assignButton.setWidth(120, Unit.PIXELS);
+		assignButton.setHeight(50, Unit.PIXELS);
 		AssignLodgingListener assignLodgingListener = new AssignLodgingListener(mgr, mgr2, registrationGrid, registrationGrid2);
 		assignLodgingListener.setCallback(buildingSelectListener);
 		assignLodgingListener.setLodginRepo(TheLodgingAssignmentTblRepo);
 		assignLodgingListener.setRegistrationRepo(TheRegistrationTblRepo);
 		assignButton.addClickListener(assignLodgingListener);
 		 // button.addClickListener(e -> System.out.println("click"));
-		Button unassignButton = new Button("Unassign");
-		unassignButton.setStyleName(ValoTheme.BUTTON_LINK);
-		unassignButton.setIcon(new ClassResource("/images/unassign_arrow.png"));
-		unassignButton.setWidth(280, Unit.PIXELS);
-		unassignButton.setHeight(200, Unit.PIXELS);
+		Button unassignButton = new Button("<- Unassign");
+		//unassignButton.setStyleName(ValoTheme.BUTTON_LINK);
+		//unassignButton.setIcon(new ClassResource("/images/unassign_arrow.png"));
+		unassignButton.setWidth(120, Unit.PIXELS);
+		unassignButton.setHeight(50, Unit.PIXELS);
 		UnAssignLodgingListener unAssignLodgingListener = new UnAssignLodgingListener(mgr, mgr2, registrationGrid, registrationGrid2);
 		unAssignLodgingListener.setLodginRepo(TheLodgingAssignmentTblRepo);
 		unAssignLodgingListener.setRegistrationRepo(TheRegistrationTblRepo);
@@ -388,12 +404,16 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		middleSection.addComponent(unassignButton);
 		List<RegistrationTbl> list = TheRegistrationTblRepo.findByHasLodging(TheActiveEvent.getId());
 		mgr2.populateFromDatabase(TheActiveEvent, list);
-		adminManager.populateAssignedLodgingRegistrationGrid(rightHandSide, bList, mgr2);
+		adminManager.populateAssignedLodgingRegistrationGrid(rightHandSide, bList, mgr2, registrationGrid2);
 //		mainLayout.addComponent(submitButton);
-		mainLayout.addComponent(leftHandSide);
-		mainLayout.addComponent(middleSection); 
-		mainLayout.addComponent(rightHandSide);
-		
+		belowMainLayout.setSizeFull();
+		belowMainLayout.addComponent(leftHandSide);
+		belowMainLayout.setExpandRatio(leftHandSide, 6);
+		belowMainLayout.addComponent(middleSection); 
+		belowMainLayout.setExpandRatio(middleSection, 2);
+		belowMainLayout.addComponent(rightHandSide);
+		belowMainLayout.setExpandRatio(rightHandSide, 12);
+		mainLayout.addComponent(belowMainLayout);
 		setContent(mainLayout); 
 	}
 	
@@ -412,13 +432,17 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		// labelTitle.setStyleName("h1");
 		mainLayout.addComponent(labelTitle);
 
+		mainLayout.addComponent(logoutButton);
+		LogoutListener logoutListener = new LogoutListener(this);
+		logoutButton.addClickListener(logoutListener);
+
 		final Label labelPerson = new Label("Add a person: ");
 
 		HorizontalLayout hLayout = new HorizontalLayout(labelPerson, newButton);
 		hLayout.setVisible(true);
 		hLayout.setHeight(100, Unit.PERCENTAGE);
 		mainLayout.addComponent(hLayout);
-		this.populateRegistrationGrid(mainLayout, registrationRecords);
+		this.populateRegistrationGrid(mainLayout, registrationRecords, true);
 		mainLayout.addComponent(submitButton);
 		setContent(mainLayout); 
 	}
@@ -439,7 +463,7 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 			hLayout.setVisible(true); 
 			hLayout.setHeight(100, Unit.PERCENTAGE);
 			mainLayout.addComponent(hLayout); 
-			this.populateRegistrationGrid(mainLayout, registrationRecords); 
+			this.populateRegistrationGrid(mainLayout, registrationRecords, true); 
 			mainLayout.addComponent(submitButton);
 			setContent(mainLayout);
 		//}
@@ -492,7 +516,7 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		setContent(mainDomainTableLayout);
 		TabSheet sheet = outList.get(0);
 		Grid<EventTbl> theGrid = new Grid<>(EventTbl.class);
-		
+			
 		List<Field> currentClassFields = (List) Lists.newArrayList(EventTbl.class.getDeclaredFields());
 		String fieldNames[] = new String[currentClassFields.size()];
 		int actualSize = 0;
@@ -678,24 +702,21 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	final Grid<RegistrationRecord> registrationGrid2= new Grid(RegistrationRecord.class); // this is used for admin containing lodgingssignments
 		
 	/**
-	 * Add a grid for the implied domain table to the layout.
-	 * 
 	 * @param layout
 	 */
-	void populateRegistrationGrid(VerticalLayout mLayout, List<RegistrationTbl> aList) { 
+	void populateRegistrationGrid(VerticalLayout mLayout, List<RegistrationTbl> aList, boolean removeFlagOption) { 
 		registrationGrid.setColumns("lastName", "firstName","chineseName");
 		if (aList == null) {
 			registrationGrid.setItems(mgr.populateDefaultRecords(TheActiveEvent));
 		} else {
 			registrationGrid.setItems(mgr.populateFromDatabase(TheActiveEvent, aList));
 		}
-		registrationGrid.setHeight(300, Unit.PIXELS);
+		registrationGrid.setHeight(700, Unit.PIXELS);
 		registrationGrid.setWidth(100, Unit.PERCENTAGE);
 		registrationGrid.setVisible(true);
 		//BiConsumer<RegistrationRecord, String> chineseNameSetter = RegistrationRecord::setChineseName;
 		
 		Setter<RegistrationRecord, String> aSetter = RegistrationRecord::setChineseName;
-		registrationGrid.getEditor().setEnabled(true);  
 		registrationGrid.getColumn("lastName")
         .setEditorComponent(new TextField())   // need a second argument for the setter!!
         .setExpandRatio(1);  
@@ -724,14 +745,18 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	 	uiHelper.addTextPropertyColumn(registrationGrid, "specialRequest", "Special Request"); 
 	 	uiHelper.addTextPropertyColumn(registrationGrid, "freeWillOffering", "Free Will Offering"); 
 	 	uiHelper.addBooleanPropertyColumn(registrationGrid, "needFancialFlag", "Need Financial Support");
-		
-		registrationGrid.addComponentColumn(record -> {
-		      Button button = new Button("Remove!");
-		      button.addClickListener(click ->
-		      	removeARegistrationRecord(record)); 
-		      return button;
-		}); 
-		
+		if (removeFlagOption) {
+			registrationGrid.addComponentColumn(record -> {
+			      Button button = new Button("Remove!");
+			      button.addClickListener(click ->
+			      	removeARegistrationRecord(record)); 
+			      return button;
+			}); 
+			registrationGrid.getEditor().setEnabled(true);
+		} else {
+			registrationGrid.setSelectionMode(SelectionMode.MULTI);
+			registrationGrid.getEditor().setEnabled(false);
+		}
 		registrationGrid.getEditor().addSaveListener(event -> {
             try {
             	// this sc is a JpaController
@@ -814,5 +839,7 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	public Set<RoomTbl> getSelectedRoom() {
 		return roomGrid.getSelectedItems();
 	}
-		
-}
+	
+	final Button logoutButton = new Button("Log out");
+
+	}

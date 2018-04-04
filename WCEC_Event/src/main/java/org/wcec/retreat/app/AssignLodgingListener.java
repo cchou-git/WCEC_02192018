@@ -100,6 +100,8 @@ public class AssignLodgingListener implements ClickListener {
 				lodgingRepo.save(newLodging);
 				// associate the LodginAssignment to the registration
 				each.getDbRecord().setLodgingAssignmentTbl(newLodging);
+				each.setBuildingName(this.selectedBuilding.getName());
+				each.setRoomNumber(this.selectedRoom.getRoomNo());
 				registrationRepo.save(each.getDbRecord());
 				// remove the record from the fromMgr
 				fromMgr.removeRecord(each);

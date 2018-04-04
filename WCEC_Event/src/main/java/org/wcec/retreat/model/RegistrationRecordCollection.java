@@ -24,6 +24,7 @@ import org.wcec.retreat.entity.EmailTbl;
 import org.wcec.retreat.entity.EventTbl;
 import org.wcec.retreat.entity.GroupTbl;
 import org.wcec.retreat.entity.JustPersonEntity;
+import org.wcec.retreat.entity.LodgingAssignmentTbl;
 import org.wcec.retreat.entity.PaymentTbl;
 import org.wcec.retreat.entity.PersonTbl;
 import org.wcec.retreat.entity.RegistrationTbl;
@@ -91,6 +92,19 @@ public class RegistrationRecordCollection {
 		aRegistration.setComment(record.getComment());
 		aRegistration.initialize(anEvent);
 		aRegistration.setDbRecord(record);
+		LodgingAssignmentTbl lodging = record.getLodgingAssignmentTbl();
+		if (lodging != null) {
+			if(lodging.getBuildingTbl() != null) {
+				aRegistration.setBuildingName(lodging.getBuildingTbl().getName());
+			} else {
+				aRegistration.setBuildingName("Not set!");
+			}
+			if(lodging.getRoomTbl() != null) {
+				aRegistration.setRoomNumber(lodging.getRoomTbl().getRoomNo());
+			} else {
+				aRegistration.setRoomNumber("Not set!");
+			} 
+		}
 		return aRegistration;
 	}
 	
@@ -119,7 +133,7 @@ public class RegistrationRecordCollection {
 
 	public Collection<RegistrationRecord> populateDefaultRecords(EventTbl anEvent) {
 		RegistrationRecord record = new RegistrationRecord();
-		record.setChineseName("周从迪");
+		record.setChineseName("");
 		record.initialize(anEvent);
 		collection.add(record);
 		record = new RegistrationRecord();

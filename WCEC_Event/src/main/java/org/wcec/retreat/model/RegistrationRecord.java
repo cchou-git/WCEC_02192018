@@ -200,7 +200,7 @@ public class RegistrationRecord implements Serializable {
 		this.attendingDates.remove(aDate);
 	} 
 	
-	Integer    age = 23;
+	
 	String specialRequest = "";
 	Boolean needFancialFlag = false;
 	boolean definedFlag = false; 
@@ -251,18 +251,14 @@ public class RegistrationRecord implements Serializable {
 	public void setGender(String gender) {
 		this.gender = gender;
 	}
-	public Integer getAge() {
-		return age;
-	}
+	 
 	public String getFreeWillOffering() {
 		return freeWillOffering;
 	}
 	public void setFreeWillOffering(String freeWillOffering) {
 		this.freeWillOffering = freeWillOffering;
 	}
-	public void setAge(Integer age) {
-		this.age = age;
-	}
+	 
 	public String getSpecialRequest() {
 		return specialRequest;
 	}
@@ -432,7 +428,7 @@ public class RegistrationRecord implements Serializable {
 	String buildingName; // assignment
 	String roomNumber; // assignment
 	String formNumber; // registration group id
-	String registrationEnglishName; // both first and last name 
+	String englishName; // both first and last name 
 	Double paymentAmount;
 	Boolean paymentExpected;
 	String paymentMethod; // chk, cash, unpaid
@@ -472,12 +468,12 @@ public class RegistrationRecord implements Serializable {
 		this.formNumber = formNumber;
 	}
 
-	public String getRegistrationEnglishName() {
-		return registrationEnglishName;
+	public String getEnglishName() {
+		return englishName;
 	}
 
-	public void setRegistrationEnglishName(String registrationEnglishName) {
-		this.registrationEnglishName = registrationEnglishName;
+	public void setEnglishName(String registrationEnglishName) {
+		this.englishName = registrationEnglishName;
 	}
 
 	public Double getPaymentAmount() {
@@ -511,11 +507,7 @@ public class RegistrationRecord implements Serializable {
 	public void setPaymentLogDate(DateTime paymentLogDate) {
 		this.paymentLogDate = paymentLogDate;
 	}
-
-	public void setAge(int age) {
-		this.age = age;
-	}
-
+ 
 	
 	Boolean lessThanFiveYearsOldFlag;
 	Boolean fiveToTwelveYearsOldFlag;
@@ -548,7 +540,7 @@ public class RegistrationRecord implements Serializable {
 	 * Set everthing to empty.
 	 */
 	private void initEmpty() {
-		this.setRegistrationEnglishName("");
+		this.setEnglishName("");
 		this.setChineseName("");
 		this.setGender("");
 	}

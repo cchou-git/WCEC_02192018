@@ -64,7 +64,7 @@ public class RegistrationRecordCollection {
 		firstName = record.getPersonTbl().getFirstNm();
 		aRegistration.setLastName(lastName);
 		aRegistration.setFirstName(firstName);
-		aRegistration.setRegistrationEnglishName(firstName + " " + lastName);
+		aRegistration.setEnglishName(firstName + " " + lastName);
 		aRegistration.setFormNumber("" + record.getId());
 		Set<AttendingTbl> dates = record.getAttendingTbls();
 		for (AttendingTbl each: dates){

@@ -2,14 +2,15 @@ package org.wcec.retreat.app;
 
 import java.util.List;
 
+import org.wcec.retreat.model.Meal;
 import org.wcec.retreat.model.RegistrationRecord;
 
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
-import com.vaadin.ui.renderers.HtmlRenderer;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.renderers.HtmlRenderer;
 
 public class UIHelper {
 	/**
@@ -48,22 +49,32 @@ public class UIHelper {
 	}
 
 	String returnChecked(String propName, Object inputRecord) {
-		RegistrationRecord record = (RegistrationRecord) inputRecord;
-		if (propName.equalsIgnoreCase("adultFlag")) {
-			if (record.getAdultFlag()) 
-				return "checked";
-			else 
-				return "";	
-		} else if (propName.equalsIgnoreCase("fullTimeFlag")) {
-			if (record.getFullTimeFlag()) 
-				return "checked";
-			else 
-				return "";
-		} else if (propName.equalsIgnoreCase("greaterThanFiveYearsOldFlag")) {
-			if (record.getGreaterThanFiveYearsOldFlag()) 
-				return "checked";
-			else 
-				return "";
+		if (inputRecord instanceof RegistrationRecord) {
+			RegistrationRecord record = (RegistrationRecord) inputRecord;
+			if (propName.equalsIgnoreCase("adultFlag")) {
+				if (record.getAdultFlag()) 
+					return "checked";
+				else 
+					return "";	
+			} else if (propName.equalsIgnoreCase("fullTimeFlag")) {
+				if (record.getFullTimeFlag()) 
+					return "checked";
+				else 
+					return "";
+			} else if (propName.equalsIgnoreCase("greaterThanFiveYearsOldFlag")) {
+				if (record.getGreaterThanFiveYearsOldFlag()) 
+					return "checked";
+				else 
+					return "";
+			}
+		} else if (inputRecord instanceof Meal) {
+			Meal record = (Meal) inputRecord;
+			if (propName.equalsIgnoreCase("Selected")) {
+				if (record.isSelected()) 
+					return "checked";
+				else 
+					return "";	
+			}  
 		}
 		return "checked";
 		

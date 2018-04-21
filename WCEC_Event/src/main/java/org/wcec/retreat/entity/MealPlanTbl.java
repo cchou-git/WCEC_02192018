@@ -34,10 +34,7 @@ public class MealPlanTbl implements Serializable {
 	@ManyToOne
 	@JoinColumn(name="meal_id")
 	private MealTbl mealTbl;
-
-	//bi-directional many-to-one association to RegistrationTbl
-	@OneToMany(mappedBy="mealPlanTbl")
-	private List<RegistrationTbl> registrationTbls;
+	    
 
 	public MealPlanTbl() {
 	}
@@ -74,26 +71,5 @@ public class MealPlanTbl implements Serializable {
 		this.mealTbl = mealTbl;
 	}
 
-	public List<RegistrationTbl> getRegistrationTbls() {
-		return this.registrationTbls;
-	}
-
-	public void setRegistrationTbls(List<RegistrationTbl> registrationTbls) {
-		this.registrationTbls = registrationTbls;
-	}
-
-	public RegistrationTbl addRegistrationTbl(RegistrationTbl registrationTbl) {
-		getRegistrationTbls().add(registrationTbl);
-		registrationTbl.setMealPlanTbl(this);
-
-		return registrationTbl;
-	}
-
-	public RegistrationTbl removeRegistrationTbl(RegistrationTbl registrationTbl) {
-		getRegistrationTbls().remove(registrationTbl);
-		registrationTbl.setMealPlanTbl(null);
-
-		return registrationTbl;
-	}
-
+	
 }

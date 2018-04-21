@@ -10,10 +10,14 @@ import java.util.Set;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.DurationFieldType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 import org.wcec.retreat.app.VaadinUI;
 import org.wcec.retreat.entity.EmailTbl;
 import org.wcec.retreat.entity.EventTbl;
 import org.wcec.retreat.entity.GroupTbl;
+import org.wcec.retreat.entity.MealTbl;
 import org.wcec.retreat.entity.PersonTbl;
 import org.wcec.retreat.entity.RegistrationTbl;
 import org.wcec.retreat.entity.RoomTbl;
@@ -76,7 +80,9 @@ public class RegistrationRecord implements Serializable {
 
 	public RegistrationRecord() {
 		genders.add("M");
-		genders.add("F"); 
+		genders.add("F");
+		mealPlan = new MealPlan();
+		mealPlan.init();
 	}
 
 	public Boolean getAdultFlag() {
@@ -156,7 +162,7 @@ public class RegistrationRecord implements Serializable {
 	
 	EventTbl myEvent;
 	 
-	public void initialize(EventTbl anEvent) {
+	public void initialize(EventTbl anEvent, MealTemplate aTemplate) {
 		myEvent = anEvent;
 		Date startDate0 = anEvent.getStartDt();
 		Date endDate0 = anEvent.getEndDt();
@@ -169,7 +175,7 @@ public class RegistrationRecord implements Serializable {
 		    DateTime d = startDate.withFieldAdded(DurationFieldType.days(), i);
 		    eventDates.add(d);
 		    addAttendingDate(d);
-		}
+		} 
 	}
 
     public Boolean getFullTimeFlag() {
@@ -543,13 +549,20 @@ public class RegistrationRecord implements Serializable {
 		this.setEnglishName("");
 		this.setChineseName("");
 		this.setGender("");
+	}  
+	
+	MealPlan mealPlan;
+	MealTemplate mTemplate;
+	 
+	public void addMeal(Meal aRecord) {
+		mealPlan.addMeal(aRecord);
 	}
-
-	public static RegistrationRecord createEmptyRecord(RoomTbl aRoom) {
-		RegistrationRecord record = new RegistrationRecord ();
-		record.initEmpty();
-		record.setRoomNumber(aRoom.getBuildingTbl().getName()+"#"+aRoom.getRoomNo());
-		return record;
+	
+	public void removeMeal(Meal aRecord) {
+		mealPlan.removeMeal(aRecord);
 	}
-
+	
+	public List<Meal> getMeals() {
+		return mealPlan.getMealList();
+	}
 }

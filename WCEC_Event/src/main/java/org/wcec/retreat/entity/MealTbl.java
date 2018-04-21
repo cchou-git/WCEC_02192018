@@ -22,8 +22,11 @@ public class MealTbl implements Serializable {
 	@Column(unique=true, nullable=false)
 	private int id;
 
-	@Column(name="age_limit", nullable=false)
-	private int ageLimit;
+	@Column(name="from_age", nullable=false)
+	private int fromAge;
+	
+	@Column(name="to_age", nullable=false)
+	private int toAge;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="last_updt_ts", nullable=false)
@@ -53,14 +56,22 @@ public class MealTbl implements Serializable {
 
 	public void setId(int id) {
 		this.id = id;
+	} 
+
+	public int getFromAge() {
+		return fromAge;
 	}
 
-	public int getAgeLimit() {
-		return this.ageLimit;
+	public void setFromAge(int fromAge) {
+		this.fromAge = fromAge;
 	}
 
-	public void setAgeLimit(int ageLimit) {
-		this.ageLimit = ageLimit;
+	public int getToAge() {
+		return toAge;
+	}
+
+	public void setToAge(int toAge) {
+		this.toAge = toAge;
 	}
 
 	public Date getLastUpdtTs() {

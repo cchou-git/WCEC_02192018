@@ -65,12 +65,7 @@ public class RegistrationTbl implements Serializable {
 
 	//bi-directional many-to-one association to MealPlanTbl
 	@OneToMany(mappedBy="registrationTbl")
-	private List<MealPlanTbl> mealPlanTbls;
-
-	//bi-directional many-to-one association to MealPlanTbl
-	@ManyToOne
-	@JoinColumn(name="meal_plan_id")
-	private MealPlanTbl mealPlanTbl;
+	private Set<MealPlanTbl> mealPlanTbls;
 
 	//bi-directional many-to-one association to EventTbl
 	@ManyToOne
@@ -151,11 +146,11 @@ public class RegistrationTbl implements Serializable {
 		this.registrationDate = registrationDate;
 	}
 
-	public List<MealPlanTbl> getMealPlanTbls() {
+	public Set<MealPlanTbl> getMealPlanTbls() {
 		return this.mealPlanTbls;
 	}
 
-	public void setMealPlanTbls(List<MealPlanTbl> mealPlanTbls) {
+	public void setMealPlanTbls(Set<MealPlanTbl> mealPlanTbls) {
 		this.mealPlanTbls = mealPlanTbls;
 	}
 
@@ -172,14 +167,7 @@ public class RegistrationTbl implements Serializable {
 
 		return mealPlanTbl;
 	}
-
-	public MealPlanTbl getMealPlanTbl() {
-		return this.mealPlanTbl;
-	}
-
-	public void setMealPlanTbl(MealPlanTbl mealPlanTbl) {
-		this.mealPlanTbl = mealPlanTbl;
-	}
+ 
 
 	public EventTbl getEventTbl() {
 		return this.eventTbl;

@@ -1,32 +1,54 @@
 package org.wcec.retreat.app;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
+import org.hibernate.Session;
 import org.wcec.retreat.entity.BuildingTbl;
+import org.wcec.retreat.entity.LodgingAssignmentTbl;
+import org.wcec.retreat.entity.PaymentTbl;
 import org.wcec.retreat.entity.RegistrationTbl;
-import org.wcec.retreat.entity.RoomTbl;
 import org.wcec.retreat.model.RegistrationRecord;
 import org.wcec.retreat.model.RegistrationRecordCollection;
+import org.wcec.retreat.repo.PaymentTblRepo;
+import org.wcec.retreat.repo.RegistrationTblRepo;
 
 import com.vaadin.server.Setter;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
-import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Grid.SelectionMode;
 
 public class AdminDisplayManager {
 	RegistrationRecordCollection mgr; 
 	Grid<RegistrationRecord> registrationGrid;
 	UIHelper uiHelper = new UIHelper();
+	UI myUI;  
 
-	public void populateAssignedLodgingRegistrationGrid(VerticalLayout mLayout, List<BuildingTbl> bList, RegistrationRecordCollection mgrOnRight, final Grid<RegistrationRecord> regGrid) {
+	public void setMyUI(UI myUI) {
+		this.myUI = myUI;
+	}
+
+	public void populateAssignedLodgingRegistrationGrid(VerticalLayout mLayout, 
+			List<BuildingTbl> bList, RegistrationRecordCollection mgrOnRight, final Grid<RegistrationRecord> regGrid,
+			PaymentTblRepo pRepo, RegistrationTblRepo rRepo
+			) {
 		mgr = mgrOnRight;
 		registrationGrid = regGrid;
+		paymentRepo = pRepo;
+		regRepo = rRepo;
 		registrationGrid.setColumns(
 				"buildingName",
 				"roomNumber", 
@@ -76,7 +98,7 @@ public class AdminDisplayManager {
 		registrationGrid.addComponentColumn(record -> {
 		      Button button = new Button("Payment!");
 		      button.addClickListener(click ->
-		      	makePaymentRegistrationRecord(record)); 
+		      	makePaymentRegistrationRecord(record, registrationGrid, mgr)); 
 		      return button;
 		}); 
 				 
@@ -86,6 +108,8 @@ public class AdminDisplayManager {
 		mLayout.addComponent(registrationGrid); 
 			
 	}
+	PaymentTblRepo paymentRepo;
+	RegistrationTblRepo regRepo;
 	
 	/**
 	 * User needs to be able to make some preference for displaying the building.
@@ -94,7 +118,6 @@ public class AdminDisplayManager {
 	 * @param aList
 	 */
 	public void populateAdminRegistrationGrid(VerticalLayout mLayout, List<BuildingTbl> bList, List<RegistrationTbl> aList) { 
-		
 		registrationGrid.setColumns(
 				"buildingName",
 				"roomNumber", 
@@ -152,8 +175,19 @@ public class AdminDisplayManager {
 	 * Make payment arrangement.
 	 * @param aRecord
 	 */
-	void makePaymentRegistrationRecord(RegistrationRecord aRecord) {
+	void makePaymentRegistrationRecord(RegistrationRecord aRecord, Grid<RegistrationRecord> registrationGrid, RegistrationRecordCollection mgr) {
 		// Plug in Jay's code here.
+		displayPaymentEditor(aRecord, registrationGrid, mgr);
 		
+	}
+	
+	void displayPaymentEditor(RegistrationRecord aRecord, Grid<RegistrationRecord> registrationGrid, RegistrationRecordCollection mgr) {
+		PaymentEditorWindow subWindow = new PaymentEditorWindow(aRecord, paymentRepo, regRepo, registrationGrid, mgr);
+        subWindow.center(); 
+        subWindow.setModal(true);
+        // Open it in the UI
+        myUI.addWindow(subWindow);
+        
+        return;
 	}
 }

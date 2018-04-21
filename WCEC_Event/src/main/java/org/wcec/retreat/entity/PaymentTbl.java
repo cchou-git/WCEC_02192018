@@ -42,6 +42,9 @@ public class PaymentTbl implements Serializable {
 	@OneToMany(mappedBy="paymentTbl")
 	private List<RegistrationTbl> registrationTbls;
 
+	@Column(name="payment_expected")
+	private Boolean paymentExpected;
+	
 	public PaymentTbl() {
 	}
 
@@ -115,5 +118,15 @@ public class PaymentTbl implements Serializable {
 
 		return registrationTbl;
 	}
+
+	public Boolean getPaymentExpected() {
+		return paymentExpected;
+	}
+
+	public void setPaymentExpected(Boolean paymentExpected) {
+		this.paymentExpected = paymentExpected;
+	}
+	
+	
 
 }

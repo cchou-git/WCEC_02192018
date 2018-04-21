@@ -1,9 +1,12 @@
 package org.wcec.retreat.app;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
+import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.DurationFieldType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +15,17 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.wcec.retreat.entity.AccessLevel;
+import org.wcec.retreat.entity.EventTbl;
 import org.wcec.retreat.entity.EventTypeTbl;
+import org.wcec.retreat.model.MealPlan;
+import org.wcec.retreat.model.MealTemplate;
 import org.wcec.retreat.repo.AccessLevelRepo;
+import org.wcec.retreat.repo.EventTblRepo;
 import org.wcec.retreat.repo.EventTypeTblRepo;
+
+import com.vaadin.server.VaadinSession;
 
 @SpringBootApplication
 @EntityScan(basePackages="org.wcec.retreat.entity")
@@ -29,6 +37,28 @@ public class Application {
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class);
 	}
+	
+	@Bean
+	MealTemplate createMealTemplate() {
+		MealTemplate appTemplate = new MealTemplate();
+		return appTemplate;
+	}
+	
+	@Bean
+	MealPlan createMealPlan() {
+		MealPlan appMealPlan = new MealPlan();
+		return appMealPlan;
+	}
+	
+	@Autowired
+	EventTblRepo repo;
+
+	@Autowired
+	static List<DateTime> activeEventDateList;
+
+	static EventTbl TheActiveEvent;
+
+	
 	
 	@Bean
 	public CommandLineRunner demo2(AccessLevelRepo repository) {

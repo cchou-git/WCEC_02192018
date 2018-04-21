@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -43,6 +44,9 @@ import org.wcec.retreat.entity.RoomTbl;
 import org.wcec.retreat.entity.UserTbl;
 import org.wcec.retreat.extendedgui.MyTableMaintenanceDesign;
 import org.wcec.retreat.gui.vaadin.extended.MyListSelect;
+import org.wcec.retreat.model.Meal;
+import org.wcec.retreat.model.MealPlan;
+import org.wcec.retreat.model.MealTemplate;
 import org.wcec.retreat.model.RegistrationRecord;
 import org.wcec.retreat.model.RegistrationRecordCollection;
 import org.wcec.retreat.repo.AccessLevelRepo;
@@ -74,8 +78,9 @@ import org.wcec.retreat.repo.UserTblRepo;
 import com.google.common.collect.Lists;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
+import com.vaadin.event.selection.SelectionEvent;
+import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.navigator.Navigator;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Setter;
 import com.vaadin.server.VaadinRequest;
@@ -95,14 +100,13 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.ValoTheme;
 
 //@Theme("base")
 @SpringUI
-public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
+public class VaadinUI extends UI implements ValueChangeListener<Set<String>>, SelectionListener<RegistrationRecord> {
 	
 	public static final int ADMIN_LEVEL = 200;
-	
+		
 	
 	@Autowired
 	AccessLevelRepo                            TheAccessLevelRepo;
@@ -249,10 +253,11 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	
 	
 	protected void setupData() {
-		TheApplicationContext = appContext; // kludge
+		fetchEvent();
 		TheEntityManager = entityManager;
 		TheEMF = emf;
 		adminManager = new AdminDisplayManager();
+		adminManager.setMyUI(this);
 		System.out.println( "init()");
 		
 		if (AllChurch == null) {
@@ -260,12 +265,16 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 			AllGroup = TheGroupTblRepo.findAll();
 			AllAddress = TheAddressTblRepo.findAll();
 		}
+		
+	}
+	
+	private EventTbl fetchEvent() {
 		List <EventTbl> eventList = TheEventTblRepo.findAllByOrderByStartDtDesc();
 		if (eventList != null) {
 			// Major kludge - relying on this for 2018 !!
 			if (TheActiveEvent == null || activeEventDateList == null) {
 				TheActiveEvent = eventList.get(0);
-				VaadinSession.getCurrent().setAttribute(SESSION_ACTIVE_EVENT, TheActiveEvent);
+				//VaadinSession.getCurrent().setAttribute(VaadinUI.SESSION_ACTIVE_EVENT, TheActiveEvent);
 				Date startDate0 = TheActiveEvent.getStartDt();
 				Date endDate0 = TheActiveEvent.getEndDt();
 				DateTime startDate = new DateTime(startDate0);
@@ -278,7 +287,9 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 				}
 			}
 		} 
+		return TheActiveEvent;
 	}
+	
 	
 	String currentUserName;
 	RegistrationTbl currentRegistrationRecord; // whoever logs on to the system...
@@ -315,9 +326,23 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	
 	public Navigator getNavigator() { return navigator; }
 	
+	
+	
 	@Override
 	protected void init(VaadinRequest vaadinRequest) {
+		TheApplicationContext = appContext; // kludge
+		VaadinSession.getCurrent().setAttribute(VaadinUI.SESSION_ACTIVE_EVENT, TheActiveEvent);
 		setupData() ;
+		appContext.getBean(MealPlan.class).init();
+		/**
+		 * A word/reminder of how to use the @Bean and @Autowired
+		 * The @Bean method must create the associated bean so that it can be
+		 * hooked up to the @Autowired interface.
+		 * 
+		 * In this case, the @Bean is placed in the Application.
+		 */
+		 
+		
 		//navigator = new Navigator(this, this);
 
 		//navigator.addView("", this);
@@ -404,7 +429,7 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		middleSection.addComponent(unassignButton);
 		List<RegistrationTbl> list = TheRegistrationTblRepo.findByHasLodging(TheActiveEvent.getId());
 		mgr2.populateFromDatabase(TheActiveEvent, list);
-		adminManager.populateAssignedLodgingRegistrationGrid(rightHandSide, bList, mgr2, registrationGrid2);
+		adminManager.populateAssignedLodgingRegistrationGrid(rightHandSide, bList, mgr2, registrationGrid2, ThePaymentTblRepo, TheRegistrationTblRepo);
 //		mainLayout.addComponent(submitButton);
 		belowMainLayout.setSizeFull();
 		belowMainLayout.addComponent(leftHandSide);
@@ -443,6 +468,8 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		hLayout.setHeight(100, Unit.PERCENTAGE);
 		mainLayout.addComponent(hLayout);
 		this.populateRegistrationGrid(mainLayout, registrationRecords, true);
+		this.displayMealPlan(mainLayout, TheActiveEvent);
+		
 		mainLayout.addComponent(submitButton);
 		setContent(mainLayout); 
 	}
@@ -711,7 +738,6 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		} else {
 			registrationGrid.setItems(mgr.populateFromDatabase(TheActiveEvent, aList));
 		}
-		registrationGrid.setHeight(700, Unit.PIXELS);
 		registrationGrid.setWidth(100, Unit.PERCENTAGE);
 		registrationGrid.setVisible(true);
 		//BiConsumer<RegistrationRecord, String> chineseNameSetter = RegistrationRecord::setChineseName;
@@ -746,6 +772,7 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	 	uiHelper.addTextPropertyColumn(registrationGrid, "freeWillOffering", "Free Will Offering"); 
 	 	uiHelper.addBooleanPropertyColumn(registrationGrid, "needFancialFlag", "Need Financial Support");
 		if (removeFlagOption) {
+			registrationGrid.setHeight(350, Unit.PIXELS);
 			registrationGrid.addComponentColumn(record -> {
 			      Button button = new Button("Remove!");
 			      button.addClickListener(click ->
@@ -753,7 +780,10 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 			      return button;
 			}); 
 			registrationGrid.getEditor().setEnabled(true);
+			registrationGrid.setSelectionMode(SelectionMode.SINGLE);
+			registrationGrid.addSelectionListener(this);
 		} else {
+			registrationGrid.setHeight(700, Unit.PIXELS);
 			registrationGrid.setSelectionMode(SelectionMode.MULTI);
 			registrationGrid.getEditor().setEnabled(false);
 		}
@@ -772,7 +802,7 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 		mLayout.addComponent(registrationGrid); 
 		newButton.addClickListener(click -> {
 			RegistrationRecord record = new RegistrationRecord();
-			record.initialize(TheActiveEvent);
+			record.initialize(TheActiveEvent, appContext.getBean(MealTemplate.class));
 			mgr.addRecord(record);
 			registrationGrid.setItems(mgr.getCollection()); 
 		});
@@ -841,5 +871,38 @@ public class VaadinUI extends UI implements ValueChangeListener<Set<String>> {
 	}
 	
 	final Button logoutButton = new Button("Log out");
+	
+	Grid<Meal> mealGrid = new Grid<Meal>(Meal.class);
 
+	/**
+	 * Add a table of meals
+	 * @param mainLayout
+	 */
+	Label mealLabel = new Label("Meal Plan for ");
+	private void displayMealPlan(VerticalLayout mLayout, EventTbl event) {
+		mLayout.addComponent(mealLabel);
+		mealGrid.setColumns("mealDescription", "mealPrice","fromAge", "toAge"); 
+		mealGrid.setHeight(400, Unit.PIXELS);
+		mealGrid.setWidth(100, Unit.PERCENTAGE);
+		mealGrid.setVisible(true);
+		
+		//BiConsumer<RegistrationRecord, String> chineseNameSetter = RegistrationRecord::setChineseName;
+		//uiHelper.addBooleanPropertyColumn(mealGrid, "selected", "Selected");
+
+		mealGrid.setSelectionMode(SelectionMode.MULTI);
+		mLayout.addComponent(mealGrid);   
+	} 
+
+	/**
+	 * When user selects a new registration record, display the corresponind meal plan table.
+	 */
+	@Override
+	public void selectionChange(SelectionEvent<RegistrationRecord> event) {
+		Optional<RegistrationRecord> selectedRecord = event.getFirstSelectedItem();
+		if (selectedRecord.isPresent() && selectedRecord.get() != null) {
+			List<Meal> list = selectedRecord.get().getMeals(); 
+			mealGrid.setItems(list);
+			mealLabel.setCaption("Meal Plan for " + selectedRecord.get().getChineseName());
+		}		
 	}
+}

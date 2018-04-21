@@ -16,6 +16,8 @@ import org.hibernate.Session;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.DurationFieldType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.wcec.retreat.app.VaadinUI;
@@ -25,6 +27,7 @@ import org.wcec.retreat.entity.EventTbl;
 import org.wcec.retreat.entity.GroupTbl;
 import org.wcec.retreat.entity.JustPersonEntity;
 import org.wcec.retreat.entity.LodgingAssignmentTbl;
+import org.wcec.retreat.entity.MealTbl;
 import org.wcec.retreat.entity.PaymentTbl;
 import org.wcec.retreat.entity.PersonTbl;
 import org.wcec.retreat.entity.RegistrationTbl;
@@ -90,7 +93,7 @@ public class RegistrationRecordCollection {
 			aRegistration.setGender("F");
 		} 
 		aRegistration.setComment(record.getComment());
-		aRegistration.initialize(anEvent);
+		aRegistration.initialize(anEvent, VaadinUI.TheApplicationContext.getBean(MealTemplate.class));
 		aRegistration.setDbRecord(record);
 		LodgingAssignmentTbl lodging = record.getLodgingAssignmentTbl();
 		if (lodging != null) {
@@ -105,6 +108,15 @@ public class RegistrationRecordCollection {
 				aRegistration.setRoomNumber("Not set!");
 			} 
 		}
+		PaymentTbl payment = record.getPaymentTbl();
+		if (payment != null) {
+			aRegistration.setPaymentAmount(payment.getAmountPaid().doubleValue());
+			aRegistration.setPaymentMethod(payment.getPaymentTextTx());
+			aRegistration.setPaymentExpected(payment.getPaymentExpected()); 
+			aRegistration.setPaymentLogDate(new DateTime(payment.getLastUpdtTs()));
+		}
+		
+		
 		return aRegistration;
 	}
 	
@@ -134,10 +146,7 @@ public class RegistrationRecordCollection {
 	public Collection<RegistrationRecord> populateDefaultRecords(EventTbl anEvent) {
 		RegistrationRecord record = new RegistrationRecord();
 		record.setChineseName("");
-		record.initialize(anEvent);
-		collection.add(record);
-		record = new RegistrationRecord();
-		record.initialize(anEvent);
+		record.initialize(anEvent, VaadinUI.TheApplicationContext.getBean(MealTemplate.class));
 		collection.add(record);
 		return collection;
 	}
